@@ -23,14 +23,18 @@ class DatatableServiceProvider extends ServiceProvider
      */
     public function register()
     {
+        $dataTableConfig=__DIR__.'/config/Table.php';
+
+        // merge config
+        $this->mergeConfigFrom($dataTableConfig, 'datatable');
+
         $this->publishes([
             __DIR__.'/config/Table.php' => config_path('datatable.php'),
-        ]);
+        ],'datatable:config');
 
         $this->app->singleton('datatable', function () {
             return new Datatable;
         });
-
         $this->app->singleton('table', function () {
             return new Table;
         });
