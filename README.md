@@ -93,7 +93,7 @@ echo Datatable::of(User::query())->remove([columnName1,columnName2,...])->init()
 
 ## Quick Installation
 ```bash
-$ composer require iyogesharma/datatable:"dev-master"
+$ composer require iyogesharma/datatable-laravel:"dev-master"
 ```
 
 #### Service Provider & Facade (Optional on Laravel 5.5)
