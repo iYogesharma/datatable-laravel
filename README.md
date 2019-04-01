@@ -127,7 +127,7 @@ before  ```</body>```  tag add
 
 ```HTML
 
-    {{datatable()->scripts()}}
+    {{table()->scripts()}}
 
 ```
 
@@ -138,7 +138,7 @@ before  ```</body>```  tag add
 
 ```HTML
 
-    {{datatable()->dependencies()}}
+    {{table()->dependencies()}}
 
 ```
 
@@ -150,7 +150,7 @@ In HTMl file inside document .ready function write
 
 ```php
 
-    {{datatable()->basic()}}
+    {{table()->basic()}}
 
 ```
 
@@ -161,19 +161,19 @@ In HTMl file inside document .ready function write
 
 ```php
 
-    {{datatable()->ajax($url,$columns,$configs)}}
+    {{table()->ajax($url,$columns,$configs)}}
 
 ```
 
 ## Example
 
 ```php
-      {{datatable()->dependencies()}}
+      {{table()->dependencies()}}
 ```
 ```HTML
      <script>
         $(document).ready(function(){
-                {{ datatable()->ajax('ddd/ddd',
+                {{ table()->ajax('ddd/ddd',
                     [   'name',
                         'email',
                         'office'
