@@ -1,0 +1,36 @@
+{
+    "name": "iyogesharma/datatable",
+    "description": "package to help in handling both server and client side datatable.js operations",
+    "type": "helper",
+    "version": "1.0.0",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Yogesh Sharma",
+            "email": "iyogesharma@gmail.com"
+        }
+    ],
+    "minimum-stability": "dev",
+    "require": {
+        "php": "^7.0.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "YS\\Datatable\\": "src/"
+        },
+        "files": [
+            "src/Helpers/helper.php"
+        ]
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "YS\\Datatable\\DatatableServiceProvider"
+            ],
+            "aliases": {
+                "Datatable":"YS\\Datatable\\Facades\\Datatable",
+                "Table":"YS\\Datatable\\Facades\\Table"
+            }
+        }
+    }
+}
