@@ -1,5 +1,5 @@
 {
-    "name": "iyogesharma/datatable",
+    "name": "iyogesharma/datatable-laravel",
     "description": "package to help in handling both server and client side datatable.js operations",
     "type": "helper",
     "version": "1.0.0",
