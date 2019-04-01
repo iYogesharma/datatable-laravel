@@ -117,7 +117,7 @@ before ```</body>``` tag add
 
 ```HTML
 
-    {{datatable()->css()}}
+    {{table()->css()}}
 
 ```
 
