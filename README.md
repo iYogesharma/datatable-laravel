@@ -1,7 +1,7 @@
 # jQuery Datatables For Laravel 5.x
 A simple package to ease datatable.js server side operations
 
-This package is created to handle [server-side](https://www.datatables.net/manual/server-side) works of [DataTables](http://datatables.net) jQuery Plugin via [AJAX option](https://datatables.net/reference/option/ajax) by using Eloquent ORM, Query Builder or Collection.
+This package is created to handle [server-side](https://www.datatables.net/manual/server-side) and [client-side]works of [DataTables](http://datatables.net) jQuery Plugin via [AJAX option](https://datatables.net/reference/option/ajax) by using Eloquent ORM, Query Builder or Collection.
 
 ## Using Helper Function
 
@@ -107,8 +107,88 @@ Register provider and facade on your `config/app.php` file.
 'aliases' => [
     ...,
     'Datatable' => YS\Datatable\Facades\Datatable::class,
+     "Table":"YS\\Datatable\\Facades\\Table::class
 ]
 ```
+
+## load css files 
+
+before ```</body>``` tag add 
+
+```HTML
+
+    {{datatable()->css()}}
+
+```
+
+## load script files 
+
+before  ```</body>```  tag add 
+
+```HTML
+
+    {{datatable()->scripts()}}
+
+```
+
+
+## load Dependencies (css/js)
+
+before  ```</body>```  tag add 
+
+```HTML
+
+    {{datatable()->dependencies()}}
+
+```
+
+
+
+## Initialize Basic DataTable
+
+In HTMl file inside document .ready function write
+
+```php
+
+    {{datatable()->basic()}}
+
+```
+
+
+## Initialize Ajax DataTable
+
+In HTMl file inside document .ready function write
+
+```php
+
+    {{datatable()->ajax($url,$columns,$configs)}}
+
+```
+
+## Example
+
+```php
+      {{datatable()->dependencies()}}
+```
+```HTML
+     <script>
+        $(document).ready(function(){
+                {{ datatable()->ajax('ddd/ddd',
+                    [   'name',
+                        'email',
+                        'office'
+                    ],[
+                        'paging'=>'true',
+                        'fixedheader'=>'true',
+                        'buttons'=>['colvis','copy','csv','print'],
+                        'order'=>[[0,'desc']],
+                        'lengthMenu'=> [[ 10, 20, 30, 40, 50], [ 10, 20, 30, 40, 50]],
+                    ]
+                )}}
+        })
+    </script>
+```
+
 
 ## License
 
