@@ -1,7 +1,7 @@
 # jQuery Datatables For Laravel 5.x
 A simple package to ease datatable.js server side operations
 
-This package is created to handle [server-side](https://www.datatables.net/manual/server-side) and [client-side]works of [DataTables](http://datatables.net) jQuery Plugin via [AJAX option](https://datatables.net/reference/option/ajax) by using Eloquent ORM, Query Builder or Collection.
+This package is created to handle [server-side](https://www.datatables.net/manual/server-side) and [client-side](https://www.datatables.net/manual)works of [DataTables](http://datatables.net) jQuery Plugin via [AJAX option](https://datatables.net/reference/option/ajax) by using Eloquent ORM, Query Builder or Collection.
 
 ## Using Helper Function
 
