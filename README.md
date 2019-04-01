@@ -107,7 +107,7 @@ Register provider and facade on your `config/app.php` file.
 'aliases' => [
     ...,
     'Datatable' => YS\Datatable\Facades\Datatable::class,
-     "Table":"YS\\Datatable\\Facades\\Table::class
+     "Table"=>YS\\Datatable\\Facades\\Table::class
 ]
 ```
 
