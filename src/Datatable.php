@@ -138,6 +138,12 @@ class Datatable
             $this->query =$source->getQuery();
             $this->start(true);
         }
+        else if($source instanceof \Illuminate\Database\Eloquent\Collection)
+        {
+
+            $this->query =$source;
+            $this->start(false);
+        }
         else if ($source instanceof \Illuminate\Database\Query\Builder)
         {
             if($source->columns){
@@ -178,7 +184,7 @@ class Datatable
         }
         else
         {
-            $this->prepareResult();
+            $this->prepareQuery();
         }
     }
 
@@ -190,7 +196,8 @@ class Datatable
     {
         $this->totalData=$this->query->count();
         $this->totalFiltered=$this->totalData;
-        $this->result=$this->query->all();
+        $this->result=$this->query->get();
+        $this->query='';
     }
     
     /**
@@ -262,17 +269,25 @@ class Datatable
      * 
      * @return bool
      */
-    public function prepareQuery() 
+    public function prepareQuery()
     {
-        if($this->search!=null) 
+        if($this->search!=null)
         {
             $this->searchQuery();
         }
-        
-        $this->totalData=$this->query->count();
-        $this->totalFiltered=$this->totalData;
-        $this->query=$this->query->offset($this->start)->limit($this->limit)->orderBy($this->columns[$this->order], $this->dir);
-        $this->result=$this->query->get()->toArray();
+        if($this->limit === "-1")
+        {
+            $this->prepareResult();
+        }
+        else
+        {
+            $this->totalData=$this->query->count();
+            $this->totalFiltered=$this->totalData;
+            $this->query=$this->query->offset($this->start)->limit($this->limit)->orderBy($this->columns[$this->order], $this->dir);
+            $this->result=$this->query->get()->toArray();
+            $this->query='';
+        }
+
         return true;
     }
 
