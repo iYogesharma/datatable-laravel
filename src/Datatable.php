@@ -196,7 +196,7 @@ class Datatable
     {
         $this->totalData=$this->query->count();
         $this->totalFiltered=$this->totalData;
-        $this->result=$this->query->get();
+        $this->result=$this->query->orderBy($this->columns[$this->order], $this->dir)->get();
         $this->query='';
     }
     
@@ -284,7 +284,7 @@ class Datatable
             $this->totalData=$this->query->count();
             $this->totalFiltered=$this->totalData;
             $this->query=$this->query->offset($this->start)->limit($this->limit)->orderBy($this->columns[$this->order], $this->dir);
-            $this->result=$this->query->get()->toArray();
+            $this->result=$this->query->get();
             $this->query='';
         }
 
