@@ -1,4 +1,4 @@
-<?php 
+<?php
 
 namespace YS\Datatable;
 
@@ -6,93 +6,100 @@ use Closure;
 
 class Datatable
 {
-    /** 
+    /**
      * Columns of table
-     * 
+     *
      * @var array
      */
     protected $columns = [];
 
-    /** 
+    /**
      * Columns for where conditions
-     * 
+     *
      * @var array
      */
     protected $whereColumns = [];
 
-    /** 
+    /**
+     * Searchable Columns for where conditions
+     *
+     * @var array
+     */
+    protected $searchColumns = [];
+
+    /**
      * Represent limit on  no of rows to display
-     * 
+     *
      * @var int
      */
     protected $limit;
 
-    /** 
+    /**
      * Represent row number from where to get data
-     * 
+     *
      * @var int
      */
     protected $start;
 
-    /** 
-     * 
-     * 
+    /**
+     *
+     *
      * @var int
      */
     protected $order;
 
-        /** 
-     * 
-     * 
+        /**
+     *
+     *
      * @var int
      */
     protected $draw;
 
     /**
      *  Direction of sort asc/desc
-     * 
+     *
      * @var string
      */
     protected $dir;
 
     /**
      * Value to be searched in table
-     * 
+     *
      * @var string
      */
     protected $search;
 
     /**
      * Value to be searched in table
-     * 
+     *
      * @var mixed
      */
     protected $result;
 
-    /** 
+    /**
      * Total data fetched fom storage
-     * 
+     *
      * @var int
      */
     protected $totalData;
 
-    /** 
-     * Total records filtered 
-     * 
+    /**
+     * Total records filtered
+     *
      * @var int
      */
     protected $totalFiltered;
 
-    /** 
+    /**
      * Query to fetch data from storage
-     * 
+     *
      * @var mixed
      */
     protected $query;
 
     /**
      * Initialize datatable
-     * 
+     *
      * @param mixed
      */
     public function of($source)
@@ -104,12 +111,12 @@ class Datatable
         {
             return $this;
         }
-        throw new \Exception("Data source  must instance of".\Illuminate\Database\Eloquent\Builder);
+        throw new \Exception("Data source  must be instance of"."\Illuminate\Database\Eloquent\Builder");
     }
 
     /**
      * Initialize datatable
-     * 
+     *
      * @param mixed
      */
     public function make($source)
@@ -126,9 +133,9 @@ class Datatable
 
     /**
      * Initialize datatable
-     * 
+     *
      * @param mixed
-     * 
+     *
      * @return bool
      */
     public function valid($source)
@@ -155,7 +162,7 @@ class Datatable
                 $this->query =$source->get();
                 $this->start(false);
             }
-            
+
         }
         else if ($source instanceof \Illuminate\Support\Collection)
         {
@@ -171,12 +178,12 @@ class Datatable
 
     /**
      * Strat process of making query
-     * 
+     *
      * @param bool decide to prepare query or not
      */
     public function start(bool $query)
     {
-        
+
         if($query)
         {
             $this->setWhereColumns();
@@ -189,8 +196,8 @@ class Datatable
     }
 
     /**
-     * Prepare result to return as response 
-     * 
+     * Prepare result to return as response
+     *
      */
     public function prepareResult()
     {
@@ -199,25 +206,29 @@ class Datatable
         $this->result=$this->query->orderBy($this->columns[$this->order], $this->dir)->get();
         $this->query='';
     }
-    
+
     /**
      * Set column names for where conditions of query
-     * 
-     * 
+     *
+     *
      */
     public function setWhereColumns()
     {
+
         foreach($this->query->columns as $c)
         {
             if(!strpos($c,'_id'))
             {
                 if(strpos($c,' as'))
                 {
+                    $column=explode(' as',$c)[1];
+                    if(in_array(trim($column),$this->searchColumns,true))
                     $this->whereColumns[]= explode(' as',$c)[0];
-                    
+
                 }
                 else
                 {
+                    if(in_array(explode('.',$c)[1],$this->searchColumns,true))
                     $this->whereColumns[]=$c;
                 }
             }
@@ -226,23 +237,28 @@ class Datatable
 
     /**
      * Set column names which are displayed on datatables
-     * 
+     *
      * @param array columns of datatable
      */
     public function setColumns($columns)
     {
         foreach($columns as $c)
         {
+
             $this->columns[]=$c['data'];
+            if($c['searchable']=='true')
+            {
+                $this->searchColumns[]=$c['data'];
+            }
         }
     }
 
     /**
      * Set  protected properties from request paramenters
-     * 
-     * @param $_GET 
+     *
+     * @param $_GET
      */
-    public function setProperties($parameters) 
+    public function setProperties($parameters)
     {
         $this->draw=$parameters['draw'];
         $this->start=$parameters['start'];
@@ -256,17 +272,17 @@ class Datatable
 
     /**
      * Initialise Datatable
-     * 
+     *
      * @return mixed
      */
-    public function init() 
+    public function init()
     {
         return json_encode($this->response());
     }
 
     /**
      * Prepare query to fetch result from storage
-     * 
+     *
      * @return bool
      */
     public function prepareQuery()
@@ -293,23 +309,23 @@ class Datatable
 
     /**
      * Handle datatable search operation
-     * 
+     *
      */
-    public function searchQuery() 
+    public function searchQuery()
     {
         if(!empty($this->columns))
         {
             $this->query=$this->condition($this->search,$this->whereColumns);
-        } 
-        
+        }
+
     }
 
     /**
      * Apply conditions on query
-     * 
+     *
      * @return \Illuminate\Database\Eloquent\Builder instance
      */
-    public function condition($search,$columns) 
+    public function condition($search,$columns)
     {
         return $this->query->where(function ($q) use ($search,$columns){
                                 $q->where($columns[0],'LIKE', "%{$search}%");
@@ -319,7 +335,7 @@ class Datatable
 
     /**
      * Return all where conditions to be nested
-     * 
+     *
      * @param mixed $q
      * @return \Illuminate\Database\Eloquent\Builder instance
      */
@@ -334,7 +350,7 @@ class Datatable
 
     /**
      * Return data to initialise datatable
-     * 
+     *
      * @return array
      */
     public function response()
@@ -347,13 +363,13 @@ class Datatable
         ];
 
     }
-    
+
     /**
      * Add/edit column details of datatable
-     * 
+     *
      * @param string column name
      * @param Closure
-     * 
+     *
      */
     public function add($column,Closure $closure)
     {
@@ -365,7 +381,7 @@ class Datatable
 
     /**
      * Add/edit column details of datatable
-     * 
+     *
      * @param string column name
      * @param Closure
      */
@@ -376,8 +392,8 @@ class Datatable
 
     /**
      * remove column  of datatable
-     * 
-     * @param string/array 
+     *
+     * @param string/array
      */
     public function remove($column)
     {
@@ -388,7 +404,7 @@ class Datatable
                 foreach($this->result as $r){
                     unset($r->$c);
                 }
-                
+
             }
         }
         else
@@ -402,10 +418,10 @@ class Datatable
 
     /**
      * Add/edit  details of multiple columns of datatable
-     * 
+     *
      * @param string column name
      * @param Closure
-     * 
+     *
      */
     public function addColumns(array $column)
     {
@@ -414,17 +430,17 @@ class Datatable
             foreach($this->result as $r){
                 $r->$c= $clos->call($this,$r);
             }
-            
+
         }
         return $this;
     }
 
     /**
      * Add/edit  details of multiple columns of datatable
-     * 
+     *
      * @param string column name
      * @param Closure
-     * 
+     *
      */
     public function editColumns(array $column)
     {
