@@ -228,8 +228,18 @@ class Datatable
                 }
                 else
                 {
-                    if(in_array(explode('.',$c)[1],$this->searchColumns,true))
-                    $this->whereColumns[]=$c;
+                    if(isset(explode('.',$c)[1]))
+                    {
+                        if(in_array(explode('.',$c)[1],$this->searchColumns,true))
+                        {
+                            $this->whereColumns[]=$c;
+                        }
+
+                    }
+                    else
+                    {
+                        $this->whereColumns[]=$c;
+                    }
                 }
             }
         }
