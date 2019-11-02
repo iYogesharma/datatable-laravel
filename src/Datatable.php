@@ -42,13 +42,14 @@ class Datatable
     protected $start;
 
     /**
-     *
+     * Represent index of ordering column
+     * @default is first column in columns array
      *
      * @var int
      */
-    protected $order;
+    protected $order = 0;
 
-        /**
+    /**
      *
      *
      * @var int
@@ -57,10 +58,11 @@ class Datatable
 
     /**
      *  Direction of sort asc/desc
+     *  @default direction ascending
      *
-     * @var string
+     *  @var string
      */
-    protected $dir;
+    protected $dir = 'asc';
 
     /**
      * Value to be searched in table
@@ -107,11 +109,10 @@ class Datatable
         /** Set properties of instance of class*/
         $this->setProperties($_GET);
 
-        if($this->valid($source))
-        {
+        if ($this->valid($source)) {
             return $this;
         }
-        throw new \Exception("Data source  must be instance of"."\Illuminate\Database\Eloquent\Builder");
+        throw new \Exception("Data source  must be instance of" . "\Illuminate\Database\Eloquent\Builder");
     }
 
     /**
@@ -124,14 +125,13 @@ class Datatable
         /** Set properties of instance of class*/
         $this->setProperties($_GET);
 
-        if($this->valid($source))
-        {
+        if ($this->valid($source)) {
             return json_encode($this->response());
         }
         throw new \Exception("Data source  must be instance of \Illuminate\Database\Eloquent\Builder");
     }
 
-    /**
+     /**
      * Initialize datatable
      *
      * @param mixed
@@ -140,37 +140,26 @@ class Datatable
      */
     public function valid($source)
     {
-        if($source instanceof \Illuminate\Database\Eloquent\Builder)
-        {
-            $this->query =$source->getQuery();
+        if ($source instanceof \Illuminate\Database\Eloquent\Builder) {
+            $this->query = $source->getQuery();
             $this->start(true);
-        }
-        else if($source instanceof \Illuminate\Database\Eloquent\Collection)
-        {
+        } else if ($source instanceof \Illuminate\Database\Eloquent\Collection) {
 
-            $this->query =$source;
+            $this->query = $source;
             $this->start(false);
-        }
-        else if ($source instanceof \Illuminate\Database\Query\Builder)
-        {
-            if($source->columns){
-                $this->query =$source;
+        } else if ($source instanceof \Illuminate\Database\Query\Builder) {
+            if ($source->columns) {
+                $this->query = $source;
                 $this->start(true);
-            }
-            else
-            {
-                $this->query =$source->get();
+            } else {
+                $this->query = $source->get();
                 $this->start(false);
             }
 
-        }
-        else if ($source instanceof \Illuminate\Support\Collection)
-        {
-            $this->query=$source;
+        } else if ($source instanceof \Illuminate\Support\Collection) {
+            $this->query = $source;
             $this->start(false);
-        }
-        else
-        {
+        } else {
             return false;
         }
         return true;
@@ -184,82 +173,11 @@ class Datatable
     public function start(bool $query)
     {
 
-        if($query)
-        {
+        if ($query) {
             $this->setWhereColumns();
             $this->prepareQuery();
-        }
-        else
-        {
+        } else {
             $this->prepareQuery();
-        }
-    }
-
-    /**
-     * Prepare result to return as response
-     *
-     */
-    public function prepareResult()
-    {
-        $this->totalData=$this->query->count();
-        $this->totalFiltered=$this->totalData;
-        $this->result=$this->query->orderBy($this->columns[$this->order], $this->dir)->get();
-        $this->query='';
-    }
-
-    /**
-     * Set column names for where conditions of query
-     *
-     *
-     */
-    public function setWhereColumns()
-    {
-
-        foreach($this->query->columns as $c)
-        {
-            if(!strpos($c,'_id'))
-            {
-                if(strpos($c,' as'))
-                {
-                    $column=explode(' as',$c)[1];
-                    if(in_array(trim($column),$this->searchColumns,true))
-                    $this->whereColumns[]= explode(' as',$c)[0];
-
-                }
-                else
-                {
-                    if(isset(explode('.',$c)[1]))
-                    {
-                        if(in_array(explode('.',$c)[1],$this->searchColumns,true))
-                        {
-                            $this->whereColumns[]=$c;
-                        }
-
-                    }
-                    else
-                    {
-                        $this->whereColumns[]=$c;
-                    }
-                }
-            }
-        }
-    }
-
-    /**
-     * Set column names which are displayed on datatables
-     *
-     * @param array columns of datatable
-     */
-    public function setColumns($columns)
-    {
-        foreach($columns as $c)
-        {
-
-            $this->columns[]=$c['data'];
-            if($c['searchable']=='true')
-            {
-                $this->searchColumns[]=$c['data'];
-            }
         }
     }
 
@@ -270,14 +188,138 @@ class Datatable
      */
     public function setProperties($parameters)
     {
-        $this->draw=$parameters['draw'];
-        $this->start=$parameters['start'];
-        $this->limit=$parameters['length'];
-        $this->order=$parameters['order'][0]['column'];
-        $this->dir=$parameters['order'][0]['dir'];
-        $this->search=$parameters['search']['value'];
+        $this->draw = $parameters['draw'];
+        $this->start = $parameters['start'];
+        $this->limit = $parameters['length'];
+
+        //checks if ordering in enabled in datatable or not
+        if (isset($parameters['order'])) {
+            $this->order = $parameters['order'][0]['column'];
+            $this->dir = $parameters['order'][0]['dir'];
+        }
+        $this->search = $parameters['search']['value'];
         $this->setColumns($parameters['columns']);
         return $this;
+    }
+
+    /**
+     * Set column names which are displayed on datatables
+     *
+     * @param array columns of datatable
+     */
+    public function setColumns($columns)
+    {
+        foreach ($columns as $c) {
+
+            $this->columns[] = $c['data'];
+            if ($c['searchable'] == 'true') {
+                $this->searchColumns[] = $c['data'];
+            }
+        }
+    }
+
+    /**
+     * Set column names for where conditions of query
+     *
+     *
+     */
+    public function setWhereColumns()
+    {
+
+        foreach ($this->query->columns as $c) {
+            if (!strpos($c, '_id')) {
+                if (strpos($c, ' as')) {
+                    $column = explode(' as', $c)[1];
+                    if (in_array(trim($column), $this->searchColumns, true)) {
+                        $this->whereColumns[] = explode(' as', $c)[0];
+                    }
+
+                } else {
+                    if (isset(explode('.', $c)[1])) {
+                        if (in_array(explode('.', $c)[1], $this->searchColumns, true)) {
+                            $this->whereColumns[] = $c;
+                        }
+
+                    } else {
+                        $this->whereColumns[] = $c;
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Prepare query to fetch result from storage
+     *
+     * @return bool
+     */
+    public function prepareQuery()
+    {
+        if ($this->search != null) {
+            $this->searchQuery();
+        }
+        if ($this->limit === "-1") {
+            $this->prepareResult();
+        } else {
+            $this->totalData = $this->query->count();
+            $this->totalFiltered = $this->totalData;
+            $this->query = $this->query->offset($this->start)->limit($this->limit)->orderBy($this->columns[$this->order], $this->dir);
+            $this->result = $this->query->get();
+            $this->query = '';
+        }
+
+        return true;
+    }
+
+    /**
+     * Prepare result to return as response
+     *
+     */
+    public function prepareResult()
+    {
+        $this->totalData = $this->query->count();
+        $this->totalFiltered = $this->totalData;
+        $this->result = $this->query->orderBy($this->columns[$this->order], $this->dir)->get();
+        $this->query = '';
+    }
+
+    /**
+     * Handle datatable search operation
+     *
+     */
+    public function searchQuery()
+    {
+        if (!empty($this->columns)) {
+            $this->query = $this->condition($this->search, $this->whereColumns);
+        }
+
+    }
+
+    /**
+     * Apply conditions on query
+     *
+     * @return \Illuminate\Database\Eloquent\Builder instance
+     */
+    public function condition($search, $columns)
+    {
+        return $this->query->where(function ($q) use ($search, $columns) {
+            $q->where($columns[0], 'LIKE', "%{$search}%");
+            return $this->nestedWheres($q);
+        });
+    }
+
+    /**
+     * Return all where conditions to be nested
+     *
+     * @param mixed $q
+     * @return \Illuminate\Database\Eloquent\Builder instance
+     */
+    public function nestedWheres($q)
+    {
+        for ($i = 1; $i < count($this->whereColumns); $i++) {
+            $q->orWhere($this->whereColumns[$i], 'LIKE', "%{$this->search}%");
+        }
+        return $q;
     }
 
     /**
@@ -291,85 +333,17 @@ class Datatable
     }
 
     /**
-     * Prepare query to fetch result from storage
-     *
-     * @return bool
-     */
-    public function prepareQuery()
-    {
-        if($this->search!=null)
-        {
-            $this->searchQuery();
-        }
-        if($this->limit === "-1")
-        {
-            $this->prepareResult();
-        }
-        else
-        {
-            $this->totalData=$this->query->count();
-            $this->totalFiltered=$this->totalData;
-            $this->query=$this->query->offset($this->start)->limit($this->limit)->orderBy($this->columns[$this->order], $this->dir);
-            $this->result=$this->query->get();
-            $this->query='';
-        }
-
-        return true;
-    }
-
-    /**
-     * Handle datatable search operation
-     *
-     */
-    public function searchQuery()
-    {
-        if(!empty($this->columns))
-        {
-            $this->query=$this->condition($this->search,$this->whereColumns);
-        }
-
-    }
-
-    /**
-     * Apply conditions on query
-     *
-     * @return \Illuminate\Database\Eloquent\Builder instance
-     */
-    public function condition($search,$columns)
-    {
-        return $this->query->where(function ($q) use ($search,$columns){
-                                $q->where($columns[0],'LIKE', "%{$search}%");
-                                return $this->nestedWheres($q);
-                            });
-    }
-
-    /**
-     * Return all where conditions to be nested
-     *
-     * @param mixed $q
-     * @return \Illuminate\Database\Eloquent\Builder instance
-     */
-    public function nestedWheres($q)
-    {
-        for($i=1;$i<count($this->whereColumns);$i++)
-        {
-            $q->orWhere($this->whereColumns[$i],'LIKE', "%{$this->search}%");
-        }
-        return $q;
-    }
-
-    /**
      * Return data to initialise datatable
      *
      * @return array
      */
     public function response()
     {
-        return  [
+        return [
             "draw" => intval($this->draw),
             "recordsTotal" => intval($this->totalData),
             "recordsFiltered" => intval($this->totalFiltered),
-            "data" => $this->result
+            "data" => $this->result,
         ];
 
     }
@@ -381,10 +355,10 @@ class Datatable
      * @param Closure
      *
      */
-    public function add($column,Closure $closure)
+    public function add($column, Closure $closure)
     {
-        foreach($this->result as $r){
-            $r->$column= $closure->call($this,$r);
+        foreach ($this->result as $r) {
+            $r->$column = $closure->call($this, $r);
         }
         return $this;
     }
@@ -395,7 +369,7 @@ class Datatable
      * @param string column name
      * @param Closure
      */
-    public function edit($column,Closure $closure)
+    public function edit($column, Closure $closure)
     {
         return $this->add($column, $closure);
     }
@@ -407,19 +381,15 @@ class Datatable
      */
     public function remove($column)
     {
-        if(is_array($column))
-        {
-            foreach($column as $c)
-            {
-                foreach($this->result as $r){
+        if (is_array($column)) {
+            foreach ($column as $c) {
+                foreach ($this->result as $r) {
                     unset($r->$c);
                 }
 
             }
-        }
-        else
-        {
-            foreach($this->result as $r){
+        } else {
+            foreach ($this->result as $r) {
                 unset($r->$column);
             }
         }
@@ -435,10 +405,9 @@ class Datatable
      */
     public function addColumns(array $column)
     {
-        foreach($column as $c=>$clos)
-        {
-            foreach($this->result as $r){
-                $r->$c= $clos->call($this,$r);
+        foreach ($column as $c => $clos) {
+            foreach ($this->result as $r) {
+                $r->$c = $clos->call($this, $r);
             }
 
         }
