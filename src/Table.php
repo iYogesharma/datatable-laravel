@@ -138,9 +138,12 @@ class Table {
 	   $markup="$('#datatable').DataTable({
 			   'fixedHeader' : ".json_encode($fixheader).",
 			   'paging' : ".$config['paging'].",
-			   'serverside':true,
+			   'serverSide':true,
 			   'dom': '".$dom."',
-			   'ajax' : '".$url."',
+			   'ajax' : {
+				 'url' :  '".$url."',
+				 'type' : 'get'
+			   },
 			   'columns' : ".json_encode($columns).",
 			   'buttons' : ".json_encode($config['buttons']).",
 			   'order' : ".json_encode($config['order']).",
