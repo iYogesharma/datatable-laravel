@@ -174,10 +174,9 @@ class Datatable
     {
 
         if ($query) {
-            $this->setWhereColumns();
             $this->prepareQuery();
         } else {
-            $this->prepareQuery();
+            $this->getResult();
         }
     }
 
@@ -284,12 +283,28 @@ class Datatable
     }
 
     /**
+     * Get result to return as response
+     *
+     */
+    public function getResult()
+    {
+        $this->totalData = $this->query->count();
+        $this->totalFiltered = $this->totalData;
+        $this->result = $this->query;;
+        $this->query = '';
+    
+    }
+
+    /**
      * Handle datatable search operation
      *
      */
     public function searchQuery()
     {
-        if (!empty($this->columns)) {
+        //set columns that are
+        $this->setWhereColumns();
+
+        if (!empty($this->whereColumns)) {
             $this->query = $this->condition($this->search, $this->whereColumns);
         }
 
