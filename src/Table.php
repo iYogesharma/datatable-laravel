@@ -33,7 +33,7 @@ class Table {
 	*/
    public function __construct()
    {
-	   $this->config=config('datatable');
+	   $this->config=config('table');
 	   $this->prepareLink();
 	   $this->prepareStyle();
    }
