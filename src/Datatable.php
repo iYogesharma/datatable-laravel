@@ -112,7 +112,7 @@ class Datatable
         if ($this->valid($source)) {
             return $this;
         }
-        throw new \Exception("Data source  must be instance of" . "\Illuminate\Database\Eloquent\Builder");
+        throw new \Exception("Data source not recognize please check query and try again");
     }
 
     /**
@@ -128,7 +128,7 @@ class Datatable
         if ($this->valid($source)) {
             return json_encode($this->response());
         }
-        throw new \Exception("Data source  must be instance of \Illuminate\Database\Eloquent\Builder");
+        throw new \Exception("Data source not recognize please check query and try again");
     }
 
      /**
