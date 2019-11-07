@@ -101,25 +101,24 @@ abstract class AbstractDatatable implements DatatableDriverInterface
 
     /**
      * Initialize datatable
-     * @param  object $source instance of one of 
-     * supported driver class 
+     * @param  object $source instance of one of
+     * supported driver class
      *
-     * @return object instance of datatabele class 
-     * based on input source 
+     * @return object instance of datatabele class
+     * based on input source
      */
-    public function datatable($source , $json = false )
+    public function datatable($source, $json = false)
     {
         // Set properties of class and initialize datatable
         $this->boot($source);
 
-        return $json?json_encode($this->response()):$this;
+        return $json ? json_encode($this->response()) : $this;
     }
-    
 
     /**
      * Initialize datatable
-     * @param  object $source instance of one of 
-     * supported driver class 
+     * @param  object $source instance of one of
+     * supported driver class
      *
      * @return jsonResponse
      */
@@ -132,12 +131,12 @@ abstract class AbstractDatatable implements DatatableDriverInterface
     }
 
     /**
-     * Initialize datatable buy setting all its 
-     * properties to be used throughout the 
+     * Initialize datatable buy setting all its
+     * properties to be used throughout the
      * initialization process
-     * @param object $source 
+     * @param object $source
      * @access protected
-     * 
+     *
      * @return void
      */
     protected function boot($source)
@@ -147,16 +146,9 @@ abstract class AbstractDatatable implements DatatableDriverInterface
 
         /** Set properties of instance of class*/
         $this->setQuery($source);
-        
+
     }
 
-    
-    
-    /*You Must Override this function 
-    to set query  based on particular driver class 
-    For the datatable to work properly
-    */
-    
     /**
      * Set  protected properties from request paramenters
      *
@@ -232,7 +224,7 @@ abstract class AbstractDatatable implements DatatableDriverInterface
     protected function prepareQuery()
     {
         $this->checkIfQueryIsForSearchingPurpose();
-        
+
         if ($this->limit === "-1") {
             $this->prepareResultWithoutOffset();
         } else {
@@ -243,14 +235,14 @@ abstract class AbstractDatatable implements DatatableDriverInterface
     }
 
     /**
-     * Checks whether the query is for searh/filter operation of datatable 
+     * Checks whether the query is for searh/filter operation of datatable
      * if query is for searching tan prepare search query
-     * 
+     *
      * @return void
      */
     protected function checkIfQueryIsForSearchingPurpose()
     {
-        $this->search != null ?  $this->searchQuery() :'';
+        $this->search != null ? $this->searchQuery() : '';
     }
 
     /**
