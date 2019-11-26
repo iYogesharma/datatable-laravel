@@ -24,6 +24,11 @@ Eloquent Query Builder, Database Query Builder and Eloquent Collection
 
 ## Modified 
 
+Modified make and datatable function . Second parameter here is boolean 
+with default to false indicate whether you want json response or not.
+If you don't pass second parameter then you need to use init() function 
+as we are using in previous version.
+
 ```php
 
 echo datatable()->make(User::query(),true);
