@@ -45,7 +45,7 @@ class Datatable
      */
     public function eloquent( $source ) 
     {
-        return (new Eloquent)->datatable( $source );
+        return (new Eloquent)->create( $source );
     }
 
      /**
@@ -56,7 +56,7 @@ class Datatable
      */
     public function collection( $source ) 
     {
-        return (new Collection)->datatable( $source );
+        return (new Collection)->create( $source );
     }
 
     /**
@@ -67,6 +67,6 @@ class Datatable
      */
     public function queryBuilder( $source ) 
     {
-        return (new QueryBuilder)->datatable( $source );
+        return (new QueryBuilder)->create( $source );
     }
 }
