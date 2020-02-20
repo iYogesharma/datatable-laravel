@@ -1,3 +1,7 @@
+[![Latest Stable Version](https://poser.pugx.org/iyogesharma/datatable-laravel/v/stable)](https://packagist.org/packages/iyogesharma/datatable-laravel)
+[![Total Downloads](https://poser.pugx.org/iyogesharma/datatable-laravel/downloads)](https://packagist.org/packages/iyogesharma/datatable-laravel)
+[![License](https://poser.pugx.org/iyogesharma/datatable-laravel/license)](https://packagist.org/packages/iyogesharma/datatable-laravel)
+
 # jQuery Datatables For Laravel 5.x
 A simple package to ease datatable.js server side operations
 
