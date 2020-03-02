@@ -2,27 +2,31 @@
 
 namespace YS\Datatable;
 
+use Illuminate\Database\Query\Builder;
+use YS\Datatable\Exceptions\IncorrectDataSourceException;
+
 class QueryBuilder extends AbstractDatatable
 {
     /**
      * Initializes datatable using Query Builder
-     * @param \Illuminate\Database\Query\Builder $source
+     * @param $source
      *
-     * @return void
+     * @return array|mixed|string
+     * @throws IncorrectDataSourceException
      */
     public function create($source)
     {
-        if ($source instanceof \Illuminate\Database\Query\Builder) {
+        if ($source instanceof Builder) {
             return $this->datatable($source);
         }
 
-        throw new \Exception("Data source  must be instance \Illuminate\Database\Query\Builder");
+        throw new IncorrectDataSourceException("Data source  must be instance of \Illuminate\Database\Query\Builder");
 
     }
 
     /**
      * Set @property $query of class
-     * @param  \Illuminate\Database\Query\Builder $source
+     * @param  Builder $source
      *
      * @return void
      */

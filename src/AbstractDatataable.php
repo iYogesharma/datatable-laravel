@@ -28,34 +28,13 @@ abstract class AbstractDatatable implements DatatableDriverInterface
     protected $searchColumns = [];
 
     /**
-     * Represent limit on  no of rows to display
-     *
-     * @var int
-     */
-    protected $limit;
-
-    /**
-     * Represent row number from where to get data
-     *
-     * @var int
-     */
-    protected $start;
-
-    /**
      * Represent index of ordering column
      * @default is first column in columns array
      *
      * @var int
      */
     protected $order = 0;
-
-    /**
-     *
-     *
-     * @var int
-     */
-    protected $draw;
-
+    
     /**
      *  Direction of sort asc/desc
      *  @default direction ascending
@@ -63,13 +42,6 @@ abstract class AbstractDatatable implements DatatableDriverInterface
      *  @var string
      */
     protected $dir = 'asc';
-
-    /**
-     * Value to be searched in table
-     *
-     * @var string
-     */
-    protected $search;
 
     /**
      * Value to be searched in table
@@ -98,51 +70,69 @@ abstract class AbstractDatatable implements DatatableDriverInterface
      * @var mixed
      */
     protected $query;
-
+    
+    /**
+     * Holds DatatableRequest Instance
+     * @var DatatableRequest
+     */
+     protected  $request;
+    
+    /**
+     * Initializes new instance
+     */
+    public function __construct()
+    {
+        $this->request = new DatatableRequest();
+    }
+    
     /**
      * Initialize datatable
      * @param  object $source instance of one of
      * supported driver class
      *
-     * @return object instance of datatabele class
-     * based on input source
+     * @return array|mixed|string
      */
     public function datatable($source, $json = false)
     {
         // Set properties of class and initialize datatable
         $this->boot($source);
-
-        return $json ? json_encode($this->response()) : $this;
+       
+        return $json ? $this->jsonResponse() : $this->response();
     }
-
+    
     /**
      * Initialize datatable
      * @param  object $source instance of one of
      * supported driver class
      *
-     * @return jsonResponse
+     * @return mixed|string
      */
     public function makeDatatable($source)
     {
         // Set properties of class and initialize datatable
         $this->boot($source);
 
-        return json_encode($this->response());
+        return  $this->jsonResponse();
     }
-
+    
+    /**
+     * Set @property $query of class
+     * @param instance $source
+     */
+    abstract public function setQuery($source);
+    
     /**
      * Initialize datatable buy setting all its
      * properties to be used throughout the
      * initialization process
      * @param object $source
-     * @access protected
      *
      * @return void
      */
     protected function boot($source)
     {
         //Set properties of class used by datatable
-        $this->setProperties($_GET);
+        $this->setProperties();
 
         /** Set properties of instance of class*/
         $this->setQuery($source);
@@ -150,34 +140,29 @@ abstract class AbstractDatatable implements DatatableDriverInterface
     }
 
     /**
-     * Set  protected properties from request paramenters
+     * Set datatable properties
      *
-     * @param $_GET
+     * @return void
      */
-    protected function setProperties($parameters)
+    protected function setProperties()
     {
-        $this->draw = $parameters['draw'];
-        $this->start = $parameters['start'];
-        $this->limit = $parameters['length'];
-
         //checks if ordering in enabled in datatable or not
-        if (isset($parameters['order'])) {
-            $this->order = $parameters['order'][0]['column'];
-            $this->dir = $parameters['order'][0]['dir'];
+        if ( $this->request->isOrderable() ) {
+            $this->order = $this->request->getOrderableColumnIndex();
+            $this->dir = $this->request->getOrderDirection();
         }
-        $this->search = $parameters['search']['value'];
-        $this->setColumns($parameters['columns']);
-        return $this;
+        
+        $this->setColumns();
     }
 
     /**
      * Set column names which are displayed on datatables
      *
-     * @param array columns of datatable
+     * @return void
      */
-    protected function setColumns($columns)
+    protected function setColumns()
     {
-        foreach ($columns as $c) {
+        foreach ($this->request->getColumns() as $c) {
 
             $this->columns[] = $c['data'];
             if ($c['searchable'] == 'true') {
@@ -193,13 +178,12 @@ abstract class AbstractDatatable implements DatatableDriverInterface
      */
     protected function setWhereColumns()
     {
-
         foreach ($this->query->columns as $c) {
             if (!strpos($c, '_id')) {
-                if (strpos($c, ' as')) {
-                    $column = explode(' as', $c)[1];
-                    if (in_array(trim($column), $this->searchColumns, true)) {
-                        $this->whereColumns[] = explode(' as', $c)[0];
+                if (strpos($c, ' as ')) {
+                    $column = explode(' as ', $c);
+                    if (in_array(trim($column[1]), $this->searchColumns, true)) {
+                        $this->whereColumns[] = $column[0];
                     }
 
                 } else {
@@ -224,52 +208,66 @@ abstract class AbstractDatatable implements DatatableDriverInterface
     protected function prepareQuery()
     {
         $this->checkIfQueryIsForSearchingPurpose();
-
-        if ($this->limit === "-1") {
-            $this->prepareResultWithoutOffset();
+    
+        $this->setTotalDataAndFiltered();
+        
+        if ($this->request->getPerPage() === "-1") {
+            $this->prepareQueryWithoutOffset();
         } else {
-            $this->prepareResultWithOffsetAndOrderBy();
+            $this->prepareQueryWithOffsetAndOrderBy();
         }
 
         return true;
     }
 
     /**
-     * Checks whether the query is for searh/filter operation of datatable
+     * Checks whether the query is for search/filter operation of datatable
      * if query is for searching tan prepare search query
      *
      * @return void
      */
     protected function checkIfQueryIsForSearchingPurpose()
     {
-        $this->search != null ? $this->searchQuery() : '';
+        if( $this->request->isSearchable() )
+        {
+            $this->totalData = $this->query->count();
+            $this->searchQuery();
+        }
     }
-
+    
+    /**
+     * Set @properties $totalData and $totalFiltered of class
+     *
+     * @returrn void
+     */
+    protected function setTotalDataAndFiltered()
+    {
+        $this->totalData = $this->totalData ?? $this->query->count();
+        $this->totalFiltered =  $this->query->count();
+    }
     /**
      * Prepare result to return as response
      *
      * @return void
      */
-    protected function prepareResultWithoutOffset()
+    protected function prepareQueryWithoutOffset()
     {
-        $this->totalData = $this->query->count();
-        $this->totalFiltered = $this->totalData;
-        $this->result = $this->query->orderBy($this->columns[$this->order], $this->dir)->get();
-        $this->query = '';
-    }
-
-    /**
-     * Prepare result to return as response
-     *
-     * @return void
-     */
-    public function prepareResultWithOffsetAndOrderBy()
-    {
-        $this->totalData = $this->query->count();
-        $this->totalFiltered = $this->totalData;
-        $this->query = $this->query->offset($this->start)->limit($this->limit)->orderBy($this->columns[$this->order], $this->dir);
+        $this->query = $this->query->orderBy($this->columns[$this->order],$this->dir);
+        
         $this->result = $this->query->get();
-        $this->query = '';
+    }
+
+    /**
+     * Prepare result to return as response
+     *
+     * @return void
+     */
+    public function prepareQueryWithOffsetAndOrderBy()
+    {
+        $this->query = $this->query->offset($this->request->getStart())
+                            ->limit($this->request->getPerPage())
+                            ->orderBy($this->columns[$this->order],$this->dir);
+        $this->result = $this->query->get();
     }
 
     /**
@@ -279,10 +277,7 @@ abstract class AbstractDatatable implements DatatableDriverInterface
      */
     public function prepareResultWithoutOffsetAndOrderBy()
     {
-        $this->totalData = $this->query->count();
-        $this->totalFiltered = $this->totalData;
         $this->result = $this->query;
-        $this->query = '';
     }
 
     /**
@@ -295,15 +290,17 @@ abstract class AbstractDatatable implements DatatableDriverInterface
         $this->setWhereColumns();
 
         if (!empty($this->whereColumns)) {
-            $this->query = $this->condition($this->search, $this->whereColumns);
+            $this->query = $this->condition($this->request->getSearchString(), $this->whereColumns);
         }
 
     }
-
+    
     /**
      * Apply conditions on query
+     * @param string $search
+     * @param array $columns
      *
-     * @return \Illuminate\Database\Eloquent\Builder instance
+     * @return mixed
      */
     protected function condition($search, $columns)
     {
@@ -317,12 +314,13 @@ abstract class AbstractDatatable implements DatatableDriverInterface
      * Return all where conditions to be nested
      *
      * @param mixed $q
+     *
      * @return \Illuminate\Database\Eloquent\Builder instance
      */
     protected function nestedWheres($q)
     {
         for ($i = 1; $i < count($this->whereColumns); $i++) {
-            $q->orWhere($this->whereColumns[$i], 'LIKE', "%{$this->search}%");
+            $q->orWhere($this->whereColumns[$i], 'LIKE', "%{$this->request->getSearchString()}%");
         }
         return $q;
     }
@@ -330,11 +328,11 @@ abstract class AbstractDatatable implements DatatableDriverInterface
     /**
      * Initialise Datatable
      *
-     * @return mixed
+     * @return false|string
      */
     public function init()
     {
-        return json_encode($this->response());
+        return $this->jsonResponse();
     }
 
     /**
@@ -345,12 +343,23 @@ abstract class AbstractDatatable implements DatatableDriverInterface
     public function response()
     {
         return [
-            "draw" => intval($this->draw),
+            "draw" => intval($this->request->getDraw()),
             "recordsTotal" => intval($this->totalData),
             "recordsFiltered" => intval($this->totalFiltered),
             "data" => $this->result,
         ];
 
+    }
+    
+    /**
+     * Return data to initialise datatable
+     *
+     * @return false|string
+     */
+    public function jsonResponse()
+    {
+       return  json_encode($this->response());
+       
     }
 
     /**
@@ -359,6 +368,7 @@ abstract class AbstractDatatable implements DatatableDriverInterface
      * @param string column name
      * @param Closure
      *
+     * @return $this
      */
     public function add($column, Closure $closure)
     {
@@ -373,6 +383,8 @@ abstract class AbstractDatatable implements DatatableDriverInterface
      *
      * @param string column name
      * @param Closure
+     *
+     * @return $this
      */
     public function edit($column, Closure $closure)
     {
@@ -383,6 +395,8 @@ abstract class AbstractDatatable implements DatatableDriverInterface
      * remove column  of datatable
      *
      * @param string/array
+     *
+     * @return $this
      */
     public function remove($column)
     {
@@ -404,30 +418,50 @@ abstract class AbstractDatatable implements DatatableDriverInterface
     /**
      * Add/edit  details of multiple columns of datatable
      *
-     * @param string column name
-     * @param Closure
+     * @param array $column
      *
+     * @return $this
      */
     public function addColumns(array $column)
     {
-        foreach ($column as $c => $clos) {
+        foreach ($column as $c => $cols) {
             foreach ($this->result as $r) {
-                $r->$c = $clos->call($this, $r);
+                $r->$c = $cols->call($this, $r);
             }
 
         }
         return $this;
     }
-
+    
     /**
      * Add/edit  details of multiple columns of datatable
      *
-     * @param string column name
-     * @param Closure
+     * @param array $column
      *
+     * @return $this
      */
     public function editColumns(array $column)
     {
         return $this->addColumns($column);
     }
+    
+    /**
+     * Get Datatable query result
+     * @return mixed
+     */
+    public function getResult()
+    {
+        return $this->result;
+    }
+    
+    /**
+     * Get Datatable query builder instance
+     * @return mixed
+     */
+    public function getQuery()
+    {
+        return $this->query;
+    }
+    
+    
 }
