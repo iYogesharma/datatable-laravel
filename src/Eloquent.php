@@ -2,27 +2,31 @@
 
 namespace YS\Datatable;
 
+use Illuminate\Database\Eloquent\Builder;
+use YS\Datatable\Exceptions\IncorrectDataSourceException;
+
 class Eloquent extends AbstractDatatable
 {
     /**
      * Initializes datatable using eloquent
-     * @param \Illuminate\Database\Eloquent\Builder $source
+     * @param $source
      *
-     * @return void
+     * @return array|mixed|string
+     * @throws IncorrectDataSourceException
      */
     public function create($source)
     {
-        if ($source instanceof \Illuminate\Database\Eloquent\Builder) {
+        if ($source instanceof Builder) {
             return $this->datatable($source);
         }
 
-        throw new \Exception("Data source  must be instance \Illuminate\Database\Eloquent\Builder");
+        throw new IncorrectDataSourceException("Data source  must be instance \Illuminate\Database\Eloquent\Builder");
 
     }
 
     /**
      * Set @property $query of class
-     * @param \Illuminate\Database\Eloquent\Builder $source
+     * @param Builder $source
      *
      * @return void
      */

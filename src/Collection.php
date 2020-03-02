@@ -2,13 +2,16 @@
 
 namespace YS\Datatable;
 
+use YS\Datatable\Exceptions\IncorrectDataSourceException;
+
 class Collection extends AbstractDatatable
 {
     /**
      * Initializes datatable using collection
-     * @param \Illuminate\Database\Eloquent\Collection $source
+     * @param $source
      *
-     * @return void
+     * @return array|mixed|string
+     * @throws IncorrectDataSourceException
      */
     public function create($source)
     {
@@ -19,18 +22,20 @@ class Collection extends AbstractDatatable
             return $this->datatable($source);
         }
 
-        throw new \Exception("Data source  must be instance of either \Illuminate\Database\Eloquent\Collection  or \Illuminate\Supprt\Collection");
+        throw new IncorrectDataSourceException(
+            "Data source  must be instance of either \Illuminate\Database\Eloquent\Collection  or \Illuminate\Supprt\Collection"
+        );
 
     }
     /**
      * Set @property $query of class
-     * @param  \Illuminate\Database\Eloquent\Collection|\Illuminate\Supprt\Collection|mixed $source
+     * @param  \Illuminate\Database\Eloquent\Collection|\Illuminate\Supprt\Collection| $source
      *
      * @return void
      */
     public function setQuery($source)
     {
-        $this->query = $source;-
+        $this->query = $source;
 
         $this->prepareResultWithoutOffsetAndOrderBy();
     }

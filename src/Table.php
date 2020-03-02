@@ -172,6 +172,8 @@ class Table {
    /**
 	* 
 	* @param array
+    *
+    * @return object
 	*/
    public function fixedheader($config){
 	   if(isset($config['fixedheader'])){
