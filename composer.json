@@ -1,7 +1,11 @@
 {
     "name": "iyogesharma/datatable-laravel",
     "description": "package to help in handling both server and client side datatable.js operations",
-    "type": "helper",
+    "keywords": [
+        "iYogesharrma",
+        "datatable",
+        "laravel"
+    ],
     "license": "MIT",
     "authors": [
         {
@@ -12,7 +16,7 @@
     "minimum-stability": "dev",
     "require": {
         "php": ">=7.0.0",
-        "laravel/framework": "5.5.*"
+        "laravel/framework": "5.*"
     },
     "autoload": {
         "psr-4": {
@@ -21,6 +25,9 @@
         "files": [
             "src/Helpers/helper.php"
         ]
+    },
+    "scripts": {
+        "test": "vendor/bin/phpunit"
     },
     "extra": {
         "laravel": {
