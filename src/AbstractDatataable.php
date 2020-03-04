@@ -97,7 +97,7 @@ abstract class AbstractDatatable implements DatatableDriverInterface
         // Set properties of class and initialize datatable
         $this->boot($source);
        
-        return $json ? $this->jsonResponse() : $this->response();
+        return $json ? $this->jsonResponse() : $this;
     }
     
     /**
