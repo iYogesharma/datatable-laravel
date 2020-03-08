@@ -35,7 +35,7 @@ class Datatable
         {
             if($source instanceof $k){
                 
-                return resolve($v)->datatable( $source , $json );
+                return app($v)->datatable( $source , $json );
             }
         }
         throw new DatatableDriverNotFoundException("Data source  must be instance of one of the drivers specified in config");
