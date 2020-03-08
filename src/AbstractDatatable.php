@@ -94,6 +94,7 @@ abstract class AbstractDatatable implements DatatableDriverInterface
      */
     public function datatable($source, $json = false)
     {
+        // dd($source);
         // Set properties of class and initialize datatable
         $this->boot($source);
        
