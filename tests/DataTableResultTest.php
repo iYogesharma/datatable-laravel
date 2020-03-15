@@ -93,5 +93,6 @@
     
             $this->assertFalse( property_exists($column, 'id') );
         }
+        
     }
     
