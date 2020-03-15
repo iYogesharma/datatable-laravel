@@ -39,7 +39,7 @@
         public function __construct( $source, $filename=null,  $headers = null )
         {
             $this->setQuery( $source );
-    
+            
             $this->results = $this->query->get()->toArray();
             
             $this->filename = $filename ?? $this->getName();
@@ -262,7 +262,7 @@
         protected function deleteUnwantedKeys()
         {
             if ( $this->heading ) {
-                delete_keys($this->headers, str_replace( "_", " ", array_map('ucfirst', config('datatable.skip') ), $i ) );
+                delete_keys($this->headers, array_map('ucwords', str_replace( "_", " ", config('datatable.skip') , $i ) ) );
             }
             
             delete_keys($this->columns, config('datatable.skip'));

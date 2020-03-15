@@ -13,7 +13,6 @@ use DB;
 
 class DataTableInitTest extends TestCase
 {
-
     public function test_datatable_helper_return_instance_of_datatable()
     {
        $this->assertTrue(datatable() instanceof Datatable);
@@ -22,9 +21,7 @@ class DataTableInitTest extends TestCase
     public function test_datatable_can_be_initialized_from_query_builder()
     {
         $this->withoutExceptionHandling();
-    
-        $this->request();
-
+        
         $table = datatable(User::getQuery());
       
         $this->assertTrue( $table instanceof QueryBuilder);
@@ -33,8 +30,6 @@ class DataTableInitTest extends TestCase
     public function test_datatable_can_be_initialized_from_eloquent_collection()
     {
         $this->withoutExceptionHandling();
-    
-        $this->request();
 
         $table = datatable(User::get());
       
@@ -44,8 +39,6 @@ class DataTableInitTest extends TestCase
     public function test_datatable_can_be_initialized_from_db_collection()
     {
         $this->withoutExceptionHandling();
-    
-        $this->request();
 
         $table = datatable(DB::table('users')->get());
       
@@ -55,8 +48,6 @@ class DataTableInitTest extends TestCase
     public function test_datatable_can_be_initialized_from_eloquent()
     {
         $this->withoutExceptionHandling();
-    
-        $this->request();
 
         $table = datatable(user::select('id','name','email'));
       
