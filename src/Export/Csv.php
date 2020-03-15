@@ -13,7 +13,7 @@
         {
             $this->setExcelCompatibility();
             // send the column headers
-            fputcsv( $this->file, $this->headers );
+            fputcsv( $this->file, $this->headers, "," );
         }
     
         /**
@@ -22,16 +22,17 @@
          * @return void
          */
         public function addCells()
-         {
-             foreach($this->results as $r){
-                 $dataToInsert = [];
-                 foreach($this->columns as $column )
-                 {
-                     $dataToInsert[] = $r->$column;
+         {;
+             $this->query->orderby('id')->chunk(500,function( $results ) {
+                 foreach($results as $r){
+                     $dataToInsert = [];
+                     foreach($this->columns as $column )
+                     {
+                         $dataToInsert[] = $r->$column;
+                     }
+                     fputcsv( $this->file, $dataToInsert , "," );
                  }
-        
-                 fputcsv( $this->file, $dataToInsert , "," );
-             }
+             });
          }
     
         /**

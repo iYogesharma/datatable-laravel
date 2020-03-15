@@ -15,6 +15,8 @@ abstract class TestCase extends BaseTestCase
         $this->migrateDatabase();
 
         $this->seedDatabase();
+    
+        $this->request();
     }
 
     protected function migrateDatabase()
@@ -43,12 +45,7 @@ abstract class TestCase extends BaseTestCase
             ]);
         });
     }
-
-    /**
-     * Set up the environment.
-     *
-     * @param \Illuminate\Foundation\Application $app
-     */
+    
     protected function getEnvironmentSetUp($app)
     {
         $app['config']->set('app.debug', true);
