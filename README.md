@@ -120,10 +120,9 @@ echo Datatable::of(User::query())->remove([columnName1,columnName2,...])->init()
 
 ## Requirements
 - [PHP >= 7.0](http://php.net/)
-- [Laravel 5.4|5.5|5.6](https://github.com/laravel/framework)
+- [Laravel 7.x](https://github.com/laravel/framework)
 - [jQuery DataTables v1.10.x](http://datatables.net/)
-
-
+- You can check previous release for different version of laravel
 
 ## Quick Installation
 ```bash
