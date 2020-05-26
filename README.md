@@ -152,7 +152,7 @@ Register provider and facade on your `config/app.php` file.
 
 before ```</body>``` tag add 
 
-```HTML
+```html
 
     {{table()->css()}}
 
@@ -162,7 +162,7 @@ before ```</body>``` tag add
 
 before  ```</body>```  tag add 
 
-```HTML
+```html
 
     {{table()->scripts()}}
 
@@ -173,7 +173,7 @@ before  ```</body>```  tag add
 
 before  ```</body>```  tag add 
 
-```HTML
+```html
 
     {{table()->dependencies()}}
 
@@ -185,7 +185,7 @@ before  ```</body>```  tag add
 
 In HTMl file inside document .ready function write
 
-```php
+```html
 
     {{table()->basic()}}
 
@@ -196,7 +196,7 @@ In HTMl file inside document .ready function write
 
 In HTMl file inside document .ready function write
 
-```php
+```html
 
     {{table()->ajax($url,$columns,$configs)}}
 
@@ -204,10 +204,9 @@ In HTMl file inside document .ready function write
 
 ## Example
 
-```php
-      {{table()->dependencies()}}
-```
 ```HTML
+    {{table()->dependencies()}}
+
      <script>
         $(document).ready(function(){
                 {{ table()->ajax('ddd/ddd',
