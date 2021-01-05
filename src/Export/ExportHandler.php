@@ -40,8 +40,8 @@
         {
             $this->setQuery( $source );
             
-            $this->results = $this->query->get()->toArray();
-            
+            $this->results = $this->query->get()->lazy();
+            dd($this->results);
             $this->filename = $filename ?? $this->getName();
             
             $this->setHeaderAndColumns( $headers );
