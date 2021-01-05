@@ -1,3 +1,7 @@
+[![Latest Stable Version](https://poser.pugx.org/iyogesharma/datatable-laravel/v/stable)](https://packagist.org/packages/iyogesharma/datatable-laravel)
+[![Total Downloads](https://poser.pugx.org/iyogesharma/datatable-laravel/downloads)](https://packagist.org/packages/iyogesharma/datatable-laravel)
+[![License](https://poser.pugx.org/iyogesharma/datatable-laravel/license)](https://packagist.org/packages/iyogesharma/datatable-laravel)
+
 # jQuery Datatables For Laravel 5.x
 A simple package to ease datatable.js server side operations
 
@@ -120,10 +124,9 @@ echo Datatable::of(User::query())->remove([columnName1,columnName2,...])->init()
 
 ## Requirements
 - [PHP >= 7.0](http://php.net/)
-- [Laravel 5.4|5.5|5.6](https://github.com/laravel/framework)
+- [Laravel 7.x](https://github.com/laravel/framework)
 - [jQuery DataTables v1.10.x](http://datatables.net/)
-
-
+- You can check previous release for different version of laravel
 
 ## Quick Installation
 ```bash
@@ -149,7 +152,7 @@ Register provider and facade on your `config/app.php` file.
 
 before ```</body>``` tag add 
 
-```HTML
+```html
 
     {{table()->css()}}
 
@@ -159,7 +162,7 @@ before ```</body>``` tag add
 
 before  ```</body>```  tag add 
 
-```HTML
+```html
 
     {{table()->scripts()}}
 
@@ -170,7 +173,7 @@ before  ```</body>```  tag add
 
 before  ```</body>```  tag add 
 
-```HTML
+```html
 
     {{table()->dependencies()}}
 
@@ -182,7 +185,7 @@ before  ```</body>```  tag add
 
 In HTMl file inside document .ready function write
 
-```php
+```html
 
     {{table()->basic()}}
 
@@ -193,7 +196,7 @@ In HTMl file inside document .ready function write
 
 In HTMl file inside document .ready function write
 
-```php
+```html
 
     {{table()->ajax($url,$columns,$configs)}}
 
@@ -201,10 +204,9 @@ In HTMl file inside document .ready function write
 
 ## Example
 
-```php
-      {{table()->dependencies()}}
-```
 ```HTML
+    {{table()->dependencies()}}
+
      <script>
         $(document).ready(function(){
                 {{ table()->ajax('ddd/ddd',
