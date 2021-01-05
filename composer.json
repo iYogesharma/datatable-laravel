@@ -2,25 +2,24 @@
     "name": "iyogesharma/datatable-laravel",
     "description": "package to help in handling both server and client side datatable.js operations",
     "keywords": [
-        "iYogesharrma",
+        "iYogesharma",
         "datatable",
         "laravel"
     ],
+    "version": "3.0",
     "license": "MIT",
-    "authors": [
-        {
-            "name": "Yogesh Sharma",
-            "email": "iyogesharma@gmail.com"
-        }
-    ],
+    "authors": [{
+        "name": "Yogesh Sharma",
+        "email": "iyogesharma@gmail.com"
+    }],
     "minimum-stability": "dev",
     "require": {
-        "php": ">=7.0.0",
-        "laravel/framework": "7.*"
+        "php": "^7.2.5",
+        "laravel/framework": "^8.0"
     },
     "require-dev": {
-        "phpunit/phpunit": "^6.4",
-        "orchestra/testbench": "~3.9.0"
+        "phpunit/phpunit": "^9.0",
+        "orchestra/testbench": "~6.4.0"
     },
     "autoload": {
         "psr-4": {
@@ -44,8 +43,8 @@
                 "YS\\Datatable\\DatatableServiceProvider"
             ],
             "aliases": {
-                "Datatable":"YS\\Datatable\\Facades\\Datatable",
-                "Table":"YS\\Datatable\\Facades\\Table"
+                "Datatable": "YS\\Datatable\\Facades\\Datatable",
+                "Table": "YS\\Datatable\\Facades\\Table"
             }
         },
         "branch-alias": {
