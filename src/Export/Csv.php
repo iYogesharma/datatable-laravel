@@ -5,6 +5,14 @@
     class Csv extends ExportHandler
     {
         /**
+         * Set excel compatibility
+         */
+        protected function setExcelCompatibility()
+        {
+            fputs($this->file , $bom =( chr(0xEF) . chr(0xBB) . chr(0xBF) ));
+        }
+        
+        /**
          * Set csv column headings
          *
          * @return void
@@ -23,7 +31,7 @@
          */
         public function addCells()
          {;
-             $this->query->orderby('id')->chunk(500,function( $results ) {
+             $this->query->orderby('id')->chunk(1000,function( $results ) {
                  foreach($results as $r){
                      $dataToInsert = [];
                      foreach($this->columns as $column )
@@ -34,18 +42,4 @@
                  }
              });
          }
-    
-        /**
-         * Set content headers for csv file
-         *
-         * @return void
-         */
-        public function setContentHeaders()
-         {
-             header('Content-Disposition: attachment;filename="'.$this->filename.'.csv"');
-             header('Content-Type: text/csv; charset=utf-8');
-             header('Pragma: no-cache');
-             header('Expires: 0');
-         }
-         
     }

@@ -22,6 +22,10 @@
             $this->results = $this->query->get()->toArray();
         
             $this->filename = $filename ?? $this->getName();
+    
+            $this->filepath = tempnam(sys_get_temp_dir(), 'json_');
+    
+            $this->ext = '.json';
             
             $this->heading = false;
     
@@ -38,18 +42,6 @@
         {
             fwrite( $this->file, json_encode( $this->results ));
         }
-    
-        /**
-         * Set content headers for json file
-         *
-         * @return void
-         */
-        public function setContentHeaders()
-        {
-            header('Content-Disposition: attachment;filename="'.$this->filename.'.json"');
-            header("Content-Type: application/json; charset=UTF-8");
-            header('Pragma: no-cache');
-            header('Expires: 0');
-        }
+        
         
     }

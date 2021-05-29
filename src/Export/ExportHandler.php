@@ -24,9 +24,15 @@
     
         /** Holds query results */
         protected $results;
-        
+    
         /** @var string Default file name */
         protected  $filename = "report";
+    
+        /** @var string temp storage path of file */
+        protected  $filepath;
+    
+        /** @var string  $ext extension of file */
+        protected  $ext = ".csv";
     
         /**
          * ExportHandler constructor.
@@ -39,11 +45,13 @@
         public function __construct( $source, $filename=null,  $headers = null )
         {
             $this->setQuery( $source );
-            
-            $this->results = $this->query->get()->lazy();
-            dd($this->results);
+        
+            $this->results = $this->query->cursor();
+        
             $this->filename = $filename ?? $this->getName();
-            
+        
+            $this->filepath = tempnam(sys_get_temp_dir(), 'csv_');
+        
             $this->setHeaderAndColumns( $headers );
         
             $this->createExport( $filename );
@@ -71,7 +79,7 @@
             if( $source instanceof \Illuminate\Database\Query\Builder )
             {
                 $this->query = $source;
-               
+            
             }
             else if( $source instanceof \Illuminate\Database\Eloquent\Builder )
             {
@@ -95,10 +103,10 @@
          */
         protected function setHeaderAndColumns( $headers )
         {
-            
+        
             if(  empty($this->query->columns)  || $this->query->columns[0] === '*' )
             {
-                    $this->query->columns = Schema::getColumnListing( $this->query->from );
+                $this->query->columns = Schema::getColumnListing( $this->query->from );
             }
             if ( $headers )
             {
@@ -108,7 +116,7 @@
             {
                 $this->guessColumnNamesAndHeaders();
             }
-            
+        
             /** The delete columns that are no longer needed in the exported sheet */
             $this->deleteUnwantedKeys();
         }
@@ -121,19 +129,17 @@
          */
         protected function createExport()
         {
-            /** Content Headers For Desired File Type */
-            $this->setContentHeaders();
-            
-            $this->openOutputStream();
-            
+        
+            $this->openFileStream();
+        
             /** Set Column Headings Of File  */
             $this->heading ? $this->setColumnHeadings() : null ;
         
             /** Insert Data In The File */
             $this->addCells();
-    
-            $this->closeOutputStream();
-            
+        
+            $this->closeFileStream();
+        
         }
     
         /**
@@ -141,11 +147,10 @@
          *
          * @return void
          */
-        protected function openOutputStream()
+        protected function openFileStream()
         {
             // create a file pointer connected to the output stream
-            $this->file = fopen('php://output', 'w');
-            
+            $this->file = fopen($this->filepath, 'w');
         }
     
         /**
@@ -153,19 +158,11 @@
          *
          * @return void
          */
-        protected function closeOutputStream()
+        protected function closeFileStream()
         {
             // create a file pointer connected to the output stream
-           fclose( $this->file );
+            fclose( $this->file );
         
-        }
-    
-        /**
-         * Set excel compatibility in case of csv
-         */
-        protected function setExcelCompatibility()
-        {
-            fputs($this->file , $bom =( chr(0xEF) . chr(0xBB) . chr(0xBF) ));
         }
     
         /**
@@ -248,13 +245,6 @@
         abstract public function addCells();
     
         /**
-         * Content Headers For Desired File Type
-         *
-         * @return void
-         */
-        abstract public function setContentHeaders();
-    
-        /**
          * Unset the query column that we don't want to export
          *
          * @return void
@@ -264,8 +254,16 @@
             if ( $this->heading ) {
                 delete_keys($this->headers, array_map('ucwords', str_replace( "_", " ", config('datatable.skip') , $i ) ) );
             }
-            
+        
             delete_keys($this->columns, config('datatable.skip'));
-            
+        
+        }
+    
+        public function response()
+        {
+            if( request()->wantsJson() ) {
+                return response()->json(['file' => $this->filepath],200);
+            }
+            return response()->download($this->filepath,"$this->filename.$this->ext")->deleteFileAfterSend(true);
         }
     }
