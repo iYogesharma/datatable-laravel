@@ -1,11 +1,12 @@
 <?php
 
-if (!function_exists('datatable')) 
+if (!function_exists('datatable'))
 {
     /**
-     * 
-     *  @return instance of \App\Helpers\Datatable  class
-     * 
+     * @param null $source
+     * @param bool $json
+     * @return \Illuminate\Contracts\Foundation\Application|\Illuminate\Foundation\Application|mixed
+     * @throws \Illuminate\Contracts\Container\BindingResolutionException
      */
     function datatable($source=null , $json = false )
     {
@@ -17,12 +18,12 @@ if (!function_exists('datatable'))
     }
 }
 
-if (!function_exists('table')) 
+if (!function_exists('table'))
 {
     /**
-     * 
+     *
      *  @return instance of \App\Helpers\Table  class
-     * 
+     *
      */
     function table()
     {
