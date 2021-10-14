@@ -97,5 +97,23 @@
         {
             return $this->request->input('columns');
         }
+    
+        /**
+         * Whether request is for file export
+         * @return bool
+         */
+        public function isForExport()
+        {
+            return $this->request->input('export') == true;
+        }
+    
+        /**
+         * desire extension for exported file
+         * @return string
+         */
+        public function extension()
+        {
+            return ucfirst($this->request->input('ext') ?? 'Xls');
+        }
         
     }
