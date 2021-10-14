@@ -38,7 +38,7 @@ if(!function_exists('heading_case')) {
      * @return string
      */
     function heading_case( string $string , $slug = '_'){
-        return title_case(str_replace( $slug, ' ', trim($string)));
+        return \Illuminate\Support\Str::title(str_replace( $slug, ' ', trim($string)));
     }
 }
 

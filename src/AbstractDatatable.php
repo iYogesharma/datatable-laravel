@@ -94,7 +94,11 @@ abstract class AbstractDatatable implements DatatableDriverInterface
      */
     public function datatable($source, $json = false)
     {
-        // dd($source);
+        if( $this->request->isForExport() )
+        {
+            $class = "\\YS\\Export\\".$this->request->extension();
+            return (new $class( $source ))->response();
+        }
         // Set properties of class and initialize datatable
         $this->boot($source);
        
@@ -110,6 +114,11 @@ abstract class AbstractDatatable implements DatatableDriverInterface
      */
     public function makeDatatable($source)
     {
+        if( $this->request->isForExport() )
+        {
+            $class = "\\YS\\Export\\".$this->request->extension();
+            return (new $class( $source ))->response();
+        }
         // Set properties of class and initialize datatable
         $this->boot($source);
 
@@ -137,7 +146,6 @@ abstract class AbstractDatatable implements DatatableDriverInterface
 
         /** Set properties of instance of class*/
         $this->setQuery($source);
-
     }
 
     /**
@@ -406,7 +414,6 @@ abstract class AbstractDatatable implements DatatableDriverInterface
                 foreach ($this->result as $r) {
                     unset($r->$c);
                 }
-
             }
         } else {
             foreach ($this->result as $r) {
@@ -463,6 +470,4 @@ abstract class AbstractDatatable implements DatatableDriverInterface
     {
         return $this->query;
     }
-    
-    
 }
