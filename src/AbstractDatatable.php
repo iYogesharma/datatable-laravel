@@ -34,7 +34,7 @@ abstract class AbstractDatatable implements DatatableDriverInterface
      * @var int
      */
     protected $order = 0;
-    
+
     /**
      *  Direction of sort asc/desc
      *  @default direction ascending
@@ -70,13 +70,13 @@ abstract class AbstractDatatable implements DatatableDriverInterface
      * @var mixed
      */
     protected $query;
-    
+
     /**
      * Holds DatatableRequest Instance
      * @var DatatableRequest
      */
      protected  $request;
-    
+
     /**
      * Initializes new instance
      */
@@ -84,7 +84,7 @@ abstract class AbstractDatatable implements DatatableDriverInterface
     {
         $this->request = new DatatableRequest();
     }
-    
+
     /**
      * Initialize datatable
      * @param  object $source instance of one of
@@ -101,10 +101,10 @@ abstract class AbstractDatatable implements DatatableDriverInterface
         }
         // Set properties of class and initialize datatable
         $this->boot($source);
-       
+
         return $json ? $this->jsonResponse() : $this;
     }
-    
+
     /**
      * Initialize datatable
      * @param  object $source instance of one of
@@ -124,13 +124,13 @@ abstract class AbstractDatatable implements DatatableDriverInterface
 
         return  $this->jsonResponse();
     }
-    
+
     /**
      * Set @property $query of class
      * @param instance $source
      */
     abstract public function setQuery($source);
-    
+
     /**
      * Initialize datatable buy setting all its
      * properties to be used throughout the
@@ -160,7 +160,7 @@ abstract class AbstractDatatable implements DatatableDriverInterface
             $this->order = $this->request->getOrderableColumnIndex();
             $this->dir = $this->request->getOrderDirection();
         }
-        
+
         $this->setColumns();
     }
 
@@ -217,9 +217,9 @@ abstract class AbstractDatatable implements DatatableDriverInterface
     protected function prepareQuery()
     {
         $this->checkIfQueryIsForSearchingPurpose();
-    
+
         $this->setTotalDataAndFiltered();
-        
+
         if ($this->request->getPerPage() === "-1") {
             $this->prepareQueryWithoutOffset();
         } else {
@@ -243,7 +243,7 @@ abstract class AbstractDatatable implements DatatableDriverInterface
             $this->searchQuery();
         }
     }
-    
+
     /**
      * Set @properties $totalData and $totalFiltered of class
      *
@@ -251,9 +251,26 @@ abstract class AbstractDatatable implements DatatableDriverInterface
      */
     protected function setTotalDataAndFiltered()
     {
-        $this->totalData = $this->totalData ?? $this->query->count();
-        $this->totalFiltered =  $this->query->count();
+		if( ! $this->totalData )
+         {
+			 // to get correct result count in case of group by
+             if( $this->query->groups )
+             {
+                 $this->totalData =  $this->query->getCountForPagination();
+             }
+             else
+             {
+                 $this->totalData =  $this->query->count();
+             }
+
+             $this->totalFiltered =   $this->totalData;
+         }
+         else
+         {
+             $this->totalFiltered =  $this->query->count();
+         }
     }
+
     /**
      * Prepare result to return as response
      *
@@ -262,7 +279,7 @@ abstract class AbstractDatatable implements DatatableDriverInterface
     protected function prepareQueryWithoutOffset()
     {
         $this->query = $this->query->orderBy($this->columns[$this->order],$this->dir);
-        
+
         $this->result = $this->query->get();
     }
 
@@ -303,7 +320,7 @@ abstract class AbstractDatatable implements DatatableDriverInterface
         }
 
     }
-    
+
     /**
      * Apply conditions on query
      * @param string $search
@@ -359,7 +376,7 @@ abstract class AbstractDatatable implements DatatableDriverInterface
         ];
 
     }
-    
+
     /**
      * Return data to initialise datatable
      *
@@ -368,7 +385,7 @@ abstract class AbstractDatatable implements DatatableDriverInterface
     public function jsonResponse()
     {
        return  json_encode($this->response());
-       
+
     }
 
     /**
@@ -440,7 +457,7 @@ abstract class AbstractDatatable implements DatatableDriverInterface
         }
         return $this;
     }
-    
+
     /**
      * Add/edit  details of multiple columns of datatable
      *
@@ -452,7 +469,7 @@ abstract class AbstractDatatable implements DatatableDriverInterface
     {
         return $this->addColumns($column);
     }
-    
+
     /**
      * Get Datatable query result
      * @return mixed
@@ -461,7 +478,7 @@ abstract class AbstractDatatable implements DatatableDriverInterface
     {
         return $this->result;
     }
-    
+
     /**
      * Get Datatable query builder instance
      * @return mixed
