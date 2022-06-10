@@ -21,6 +21,13 @@ abstract class AbstractDatatable implements DatatableDriverInterface
     protected $whereColumns = [];
 
     /**
+     * Columns for having conditions
+     *
+     * @var array
+     */
+    protected $havingColumns = [];
+
+    /**
      * Searchable Columns for where conditions
      *
      * @var array
@@ -188,21 +195,30 @@ abstract class AbstractDatatable implements DatatableDriverInterface
     protected function setWhereColumns()
     {
         foreach ($this->query->columns as $c) {
-            if (!strpos($c, '_id')) {
+            if(gettype($c) === 'object'){
+                $c  = $c->getValue();
                 if (strpos($c, ' as ')) {
                     $column = explode(' as ', $c);
                     if (in_array(trim($column[1]), $this->searchColumns, true)) {
-                        $this->whereColumns[] = $column[0];
+                        $this->havingColumns[] = trim($column[1]);
+                    }
+                } 
+            }
+            else if (!strpos($c, '_id')) {
+                if (strpos($c, ' as ')) {
+                    $column = explode(' as ', $c);
+                    if (in_array(trim($column[1]), $this->searchColumns, true)) {
+                        $this->whereColumns[] = trim($column[0]);
                     }
 
                 } else {
                     if (isset(explode('.', $c)[1])) {
                         if (in_array(explode('.', $c)[1], $this->searchColumns, true)) {
-                            $this->whereColumns[] = $c;
+                            $this->whereColumns[] =  trim($c);
                         }
 
                     } else {
-                        $this->whereColumns[] = $c;
+                        $this->whereColumns[] = trim($c);
                     }
                 }
             }
@@ -251,9 +267,9 @@ abstract class AbstractDatatable implements DatatableDriverInterface
      */
     protected function setTotalDataAndFiltered()
     {
-		if( ! $this->totalData )
-         {
-			 // to get correct result count in case of group by
+        if( ! $this->totalData )
+        {
+             // to get correct result count in case of group by
              if( $this->query->groups )
              {
                  $this->totalData =  $this->query->getCountForPagination();
@@ -264,11 +280,22 @@ abstract class AbstractDatatable implements DatatableDriverInterface
              }
 
              $this->totalFiltered =   $this->totalData;
-         }
-         else
-         {
-             $this->totalFiltered =  $this->query->count();
-         }
+        }
+        else
+        {
+          
+            $this->totalFiltered =  $this->query->count();
+            if( !$this->totalFiltered )
+            {
+                if (!empty($this->havingColumns)) 
+                {
+                    $this->query->bindings['where'] = []; 
+                    $this->query->wheres = [];
+                    $this->havingCondition($this->request->getSearchString(), $this->havingColumns);
+		    $this->totalFiltered =  $this->query->count();
+                }
+            }
+        }
     }
 
     /**
@@ -318,7 +345,6 @@ abstract class AbstractDatatable implements DatatableDriverInterface
         if (!empty($this->whereColumns)) {
             $this->query = $this->condition($this->request->getSearchString(), $this->whereColumns);
         }
-
     }
 
     /**
@@ -328,27 +354,55 @@ abstract class AbstractDatatable implements DatatableDriverInterface
      *
      * @return mixed
      */
-    protected function condition($search, $columns)
+    protected function condition($search, $columns, $type = 'Where')
     {
         return $this->query->where(function ($q) use ($search, $columns) {
             $q->where($columns[0], 'LIKE', "%{$search}%");
-            return $this->nestedWheres($q);
+            return $this->nestedWheres($q,$search);
         });
+    }
+
+    /**
+     * Apply having clause on query
+     * @param string $search
+     * @param array $columns
+     *
+     * @return mixed
+     */
+    protected function havingCondition($search, $columns )
+    {
+        $this->query->havingRaw("{$columns[0]} LIKE '%{$search}%'");
+        return $this->nestedHaving($search);
     }
 
     /**
      * Return all where conditions to be nested
      *
      * @param mixed $q
+     * @param string $search search string
      *
      * @return \Illuminate\Database\Eloquent\Builder instance
      */
-    protected function nestedWheres($q)
+    protected function nestedWheres($q,$search)
     {
         for ($i = 1; $i < count($this->whereColumns); $i++) {
-            $q->orWhere($this->whereColumns[$i], 'LIKE', "%{$this->request->getSearchString()}%");
+            $q->orWhere($this->whereColumns[$i], 'LIKE', "%{$search}%");
         }
-        return $q;
+        return $q; 
+    }
+
+    /**
+     * Return all having clauses to be nested
+     *
+     * @param string $type search string
+     *
+     * @return \Illuminate\Database\Eloquent\Builder instance
+     */
+    protected function nestedHaving($search)
+    {
+        for ($i = 1; $i < count($this->havingColumns); $i++) {
+            $this->query->orHavingRaw("{$this->havingColumns[$i]} LIKE '%{$search}%'");
+        }
     }
 
     /**
@@ -385,7 +439,6 @@ abstract class AbstractDatatable implements DatatableDriverInterface
     public function jsonResponse()
     {
        return  json_encode($this->response());
-
     }
 
     /**
@@ -453,7 +506,6 @@ abstract class AbstractDatatable implements DatatableDriverInterface
             foreach ($this->result as $r) {
                 $r->$c = $cols->call($this, $r);
             }
-
         }
         return $this;
     }
@@ -488,3 +540,4 @@ abstract class AbstractDatatable implements DatatableDriverInterface
         return $this->query;
     }
 }
+
