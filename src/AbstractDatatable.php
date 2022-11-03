@@ -255,7 +255,7 @@ abstract class AbstractDatatable implements DatatableDriverInterface
     {
         if( $this->request->isSearchable() )
         {
-            $this->totalData = $this->query->count();
+            $this->totalData = $this->query->getCountForPagination();
             $this->searchQuery();
         }
     }
@@ -269,22 +269,14 @@ abstract class AbstractDatatable implements DatatableDriverInterface
     {
         if( ! $this->totalData )
         {
-             // to get correct result count in case of group by
-             if( $this->query->groups )
-             {
-                 $this->totalData =  $this->query->getCountForPagination();
-             }
-             else
-             {
-                 $this->totalData =  $this->query->count();
-             }
+             $this->totalData =  $this->query->getCountForPagination();
 
              $this->totalFiltered =   $this->totalData;
         }
         else
         {
           
-            $this->totalFiltered =  $this->query->count();
+            $this->totalFiltered =  $this->query->getCountForPagination();
             if( !$this->totalFiltered )
             {
                 if (!empty($this->havingColumns)) 
@@ -292,7 +284,7 @@ abstract class AbstractDatatable implements DatatableDriverInterface
                     $this->query->bindings['where'] = []; 
                     $this->query->wheres = [];
                     $this->havingCondition($this->request->getSearchString(), $this->havingColumns);
-		    $this->totalFiltered =  $this->query->count();
+		    $this->totalFiltered =  $this->query->getCountForPagination();
                 }
             }
         }
