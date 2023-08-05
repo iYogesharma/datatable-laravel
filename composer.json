@@ -15,7 +15,7 @@
     "minimum-stability": "dev",
     "require": {
         "php": ">=7.0.0",
-        "laravel/framework": ">=5.*",
+        "laravel/framework": ">=5.0",
         "iyogesharma/export": "^1.0",
          "ext-json": "*"
     },
