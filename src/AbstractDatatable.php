@@ -196,7 +196,7 @@ abstract class AbstractDatatable implements DatatableDriverInterface
     {
         foreach ($this->query->columns as $c) {
             if(gettype($c) === 'object'){
-                $c  = $c->getValue();
+                $c  = $c->getValue($this->query->grammar);
                 if (strpos($c, ' as ')) {
                     $column = explode(' as ', $c);
                     if (in_array(trim($column[1]), $this->searchColumns, true)) {
