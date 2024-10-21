@@ -1,44 +1,87 @@
+<p align="center">
+	<img src="https://github.com/iYogesharma/datatable-laravel/blob/master/logo.png" /></p>
+
 [![Latest Stable Version](https://poser.pugx.org/iyogesharma/datatable-laravel/v/stable)](https://packagist.org/packages/iyogesharma/datatable-laravel)
 [![Total Downloads](https://poser.pugx.org/iyogesharma/datatable-laravel/downloads)](https://packagist.org/packages/iyogesharma/datatable-laravel)
 [![License](https://poser.pugx.org/iyogesharma/datatable-laravel/license)](https://packagist.org/packages/iyogesharma/datatable-laravel)
 
-# jQuery Datatables For Laravel 5.x
+# jQuery Datatables For Laravel 
 A simple package to ease datatable.js server side operations
 
 This package is created to handle [server-side](https://www.datatables.net/manual/server-side) and [client-side](https://www.datatables.net/manual) works of [DataTables](http://datatables.net) jQuery Plugin via [AJAX option](https://datatables.net/reference/option/ajax) by using Eloquent ORM, Query Builder or Collection.
 
 
-## datatable-laravel 2.0
+## datatable-laravel 4.x
 
-Version 2.0 continues the improvements in version 1.0.3 by introducing some new functions , improved code structure  and various bug fixes.
+Version 4.x continues the improvements in version 3.x by introducing some new features
 
 ## New
 
-Introduced three new functions for the case if you know 
-query is instance of which class. Currently supported include:
-Eloquent Query Builder, Database Query Builder and Eloquent Collection
+ - Added support for select raw queries
+ 
+ - Auto guess column names if no columns are provided in request
+ 
+ - Auto guess column names if * is provided in column names
+ 
+ - Added support for group by and havig clause
 
-```php
+ - Example
+    ```php
+      echo  datatable(User::select('users.name','users.email','users.contact_no','users.role_id')
+        ->selectRaw("
+            Max(id) as total
+       ")
+       ->groupBy('users.name', 'users.email', 'users.contact_no'))->init();
+    
+      echo   datatable(User::select('users.*'))->init();
+    ```
 
-  echo  datatable()->eloquent(User::query())->init();
-  echo  datatable()->collection(User::query())->init();
-  echo  datatable()->queryBuilder(User::query())->init();
 
-```
+ - Added Support For Data Filtering From Client Side
+ - Added Column Wise Search Query Support Using Below Api
+ - Example
+    ```json 
+    {
+      "columns": [
+        {
+          "data": "name",
+          "name": "name",
+          "searchable": true,
+          "orderable": true,
+          "search": {
+            "value": "",
+            "regex": false
+          }
+        }
+      ],
+      "start": 0,
+      "length": 10,
+      "search": {
+        "value": "Yoges",
+        "regex": false
+      },
+      "filters": {
+        "role_id" : [1,2],// role id in 1,2
+        "created_at": [date1, date2], // createde at is between date1 and date2,
+        "name": "iyogesh" // where name = iyogesh
+      }
+    }
+    
+    ```
 
 ## Modified 
 
-Modified make and datatable function . Second parameter here is boolean 
-with default to false indicate whether you want json response or not.
-If you don't pass second parameter then you need to use init() function 
-as we are using in previous version.
+Modified datatable function to support server side export to xls,csv and json
 
-```php
+You just need to pass 2 new arguments in query-string/body  `export` and ` ext `
 
-echo datatable()->make(User::query(),true);
-echo datatable(User::query(),true);
+if ` export = true ` it will return download file response
+for `ext` default value is `xlsx`
 
+```javascript 
+    https://datatable-url?export=true&ext=xlsx
 ```
+
 
 
 ## Using Helper Function

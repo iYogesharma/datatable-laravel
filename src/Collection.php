@@ -37,6 +37,11 @@ class Collection extends AbstractDatatable
     {
         $this->query = $source;
 
+        if( $this->request->hasFilters())
+        {
+            $this->setFilters();
+        }
+
         $this->prepareResultWithoutOffsetAndOrderBy();
     }
 

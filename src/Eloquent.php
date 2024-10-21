@@ -34,6 +34,11 @@ class Eloquent extends AbstractDatatable
     {
         $this->query = $source->getQuery();
 
+        if( $this->request->hasFilters())
+        {
+            $this->setFilters();
+        }
+
         $this->prepareQuery();
     }
 }

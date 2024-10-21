@@ -34,9 +34,17 @@ class QueryBuilder extends AbstractDatatable
     {
         if ($source->columns) {
             $this->query = $source;
+            if( $this->request->hasFilters())
+            {
+                $this->setFilters();
+            }
             $this->prepareQuery();
         } else {
             $this->query = $source->get();
+            if( $this->request->hasFilters())
+            {
+                $this->setFilters();
+            }
             $this->prepareResultWithoutOffsetAndOrderBy();
         }
     }
