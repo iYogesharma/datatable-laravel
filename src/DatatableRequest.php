@@ -95,7 +95,7 @@
          */
         public function getColumns()
         {
-            return $this->request->input('columns');
+            return $this->request->input('columns') ?? [];
         }
     
         /**
@@ -113,7 +113,37 @@
          */
         public function extension()
         {
-            return ucfirst($this->request->input('ext') ?? 'Xls');
+            return ucfirst($this->request->input('ext') ?? 'xlsx');
+        }
+
+         /**
+         * String to search in datatable
+         * @return string
+         */
+        public function hasFilters()
+        {
+            return $this->request->input('filters')&& !empty($this->request->input('filters'));
+        }
+    
+        /**
+         * Filters to be applied on table query
+         * @return array
+         */
+        public function getFilters(){
+           $filters = $this->request->input('filters');
+            if(gettype($this->request->input('filters')) !== 'array' )
+            {
+                $filters =  json_decode($this->request->input('filters'),true) ;
+            }
+            $arrayFilters = [];
+            foreach($filters as $k=>$v) {
+                if(gettype($v) === 'array') {
+                    $arrayFilters[$k] = $v;
+                    unset($filters[$k]);
+                }
+            }
+    
+            return [ 'basic' => $filters, 'array' => $arrayFilters ];
         }
         
     }

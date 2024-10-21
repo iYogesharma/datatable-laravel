@@ -2,37 +2,12 @@
 
 namespace YS\Datatable;
 
-use Closure;
+use YS\Datatable\Traits\HasQueryBuilder;
+use YS\Datatable\Traits\ManagesTableColumns;
 
 abstract class AbstractDatatable implements DatatableDriverInterface
 {
-    /**
-     * Columns of table
-     *
-     * @var array
-     */
-    protected $columns = [];
-
-    /**
-     * Columns for where conditions
-     *
-     * @var array
-     */
-    protected $whereColumns = [];
-
-    /**
-     * Columns for having conditions
-     *
-     * @var array
-     */
-    protected $havingColumns = [];
-
-    /**
-     * Searchable Columns for where conditions
-     *
-     * @var array
-     */
-    protected $searchColumns = [];
+    use ManagesTableColumns, HasQueryBuilder;
 
     /**
      * Represent index of ordering column
@@ -71,18 +46,12 @@ abstract class AbstractDatatable implements DatatableDriverInterface
      */
     protected $totalFiltered;
 
-    /**
-     * Query to fetch data from storage
-     *
-     * @var mixed
-     */
-    protected $query;
 
     /**
      * Holds DatatableRequest Instance
      * @var DatatableRequest
      */
-     protected  $request;
+    protected  $request;
 
     /**
      * Initializes new instance
@@ -103,8 +72,11 @@ abstract class AbstractDatatable implements DatatableDriverInterface
     {
         if( $this->request->isForExport() )
         {
-            $class = "\\YS\\Export\\".$this->request->extension();
-            return (new $class( $source ))->response();
+            $class = config('datatable.export')[strtolower($this->request->extension())];
+            
+            $handler = new DatatableExportHandler( $class, $source );
+
+            return $json ?   $handler->response() :  $handler;
         }
         // Set properties of class and initialize datatable
         $this->boot($source);
@@ -123,8 +95,11 @@ abstract class AbstractDatatable implements DatatableDriverInterface
     {
         if( $this->request->isForExport() )
         {
-            $class = "\\YS\\Export\\".$this->request->extension();
-            return (new $class( $source ))->response();
+            $class = config('datatable.export')[strtolower($this->request->extension())];
+
+            $handler = new DatatableExportHandler( $class, $source );
+
+            return $handler->response();
         }
         // Set properties of class and initialize datatable
         $this->boot($source);
@@ -167,62 +142,6 @@ abstract class AbstractDatatable implements DatatableDriverInterface
             $this->order = $this->request->getOrderableColumnIndex();
             $this->dir = $this->request->getOrderDirection();
         }
-
-        $this->setColumns();
-    }
-
-    /**
-     * Set column names which are displayed on datatables
-     *
-     * @return void
-     */
-    protected function setColumns()
-    {
-        foreach ($this->request->getColumns() as $c) {
-
-            $this->columns[] = $c['data'];
-            if ($c['searchable'] == 'true') {
-                $this->searchColumns[] = $c['data'];
-            }
-        }
-    }
-
-    /**
-     * Set column names for where conditions of query
-     *
-     * @return void
-     */
-    protected function setWhereColumns()
-    {
-        foreach ($this->query->columns as $c) {
-            if(gettype($c) === 'object'){
-                $c  = $c->getValue($this->query->grammar);
-                if (strpos($c, ' as ')) {
-                    $column = explode(' as ', $c);
-                    if (in_array(trim($column[1]), $this->searchColumns, true)) {
-                        $this->havingColumns[] = trim($column[1]);
-                    }
-                } 
-            }
-            else if (!strpos($c, '_id')) {
-                if (strpos($c, ' as ')) {
-                    $column = explode(' as ', $c);
-                    if (in_array(trim($column[1]), $this->searchColumns, true)) {
-                        $this->whereColumns[] = trim($column[0]);
-                    }
-
-                } else {
-                    if (isset(explode('.', $c)[1])) {
-                        if (in_array(explode('.', $c)[1], $this->searchColumns, true)) {
-                            $this->whereColumns[] =  trim($c);
-                        }
-
-                    } else {
-                        $this->whereColumns[] = trim($c);
-                    }
-                }
-            }
-        }
     }
 
     /**
@@ -232,6 +151,8 @@ abstract class AbstractDatatable implements DatatableDriverInterface
      */
     protected function prepareQuery()
     {
+        $this->setColumns();
+
         $this->checkIfQueryIsForSearchingPurpose();
 
         $this->setTotalDataAndFiltered();
@@ -253,9 +174,10 @@ abstract class AbstractDatatable implements DatatableDriverInterface
      */
     protected function checkIfQueryIsForSearchingPurpose()
     {
-        if( $this->request->isSearchable() )
+        if( $this->request->isSearchable() || !empty($this->searchColumns) )
         {
             $this->totalData = $this->query->getCountForPagination();
+
             $this->searchQuery();
         }
     }
@@ -281,16 +203,70 @@ abstract class AbstractDatatable implements DatatableDriverInterface
             {
                 if (!empty($this->havingColumns)) 
                 {
-                    $this->query->bindings['where'] = []; 
+                    $this->query->bindings['where'] = [];
                     $this->query->wheres = [];
-                    $this->havingCondition($this->request->getSearchString(), $this->havingColumns);
-		    $this->totalFiltered =  $this->query->getCountForPagination();
+                    $this->havingCondition($this->havingColumns);
+		            $this->totalFiltered =  $this->query->getCountForPagination();
                 }
             }
         }
     }
 
     /**
+     * Handle datatable search operation
+     *
+     */
+    protected function searchQuery()
+    {
+        //set columns that are searchable
+        $this->setWhereColumns();
+
+        if (!empty($this->whereColumns)) {
+            $this->query = $this->condition( $this->whereColumns );
+        }
+    }
+
+
+    /**
+     * Set filterable conditions on query
+     *
+     * @return void
+     */
+    protected function setFilters()
+    {
+        $filters = $this->request->getFilters();
+        $this->query = $this->query->where($filters['basic']);
+        if( count($filters['array']) > 0 )
+        {
+            $this->setArrayFilters( $filters['array']);
+        }
+    }
+
+    /**
+     * set array filter conditions on query
+     *
+     * @param array $filters
+     */
+    protected function setArrayFilters( array $filters )
+    {
+        foreach( $filters as $k => $v )
+        {
+            if( count($v) > 0)
+            {
+                if (strpos($k, '_at') !== false || strpos($k, 'date') !== false || strpos($k, 'time') !== false) 
+                {
+                    $this->query = $this->query->whereBetween($k, $v);
+                }
+                else
+                {
+                    $this->query = $this->query->whereIn($k, $v);
+                }
+            }
+        }
+    }
+        
+
+       /**
      * Prepare result to return as response
      *
      * @return void
@@ -324,78 +300,7 @@ abstract class AbstractDatatable implements DatatableDriverInterface
     {
         $this->result = $this->query;
     }
-
-    /**
-     * Handle datatable search operation
-     *
-     */
-    protected function searchQuery()
-    {
-        //set columns that are searchable
-        $this->setWhereColumns();
-
-        if (!empty($this->whereColumns)) {
-            $this->query = $this->condition($this->request->getSearchString(), $this->whereColumns);
-        }
-    }
-
-    /**
-     * Apply conditions on query
-     * @param string $search
-     * @param array $columns
-     *
-     * @return mixed
-     */
-    protected function condition($search, $columns, $type = 'Where')
-    {
-        return $this->query->where(function ($q) use ($search, $columns) {
-            $q->where($columns[0], 'LIKE', "%{$search}%");
-            return $this->nestedWheres($q,$search);
-        });
-    }
-
-    /**
-     * Apply having clause on query
-     * @param string $search
-     * @param array $columns
-     *
-     * @return mixed
-     */
-    protected function havingCondition($search, $columns )
-    {
-        $this->query->havingRaw("{$columns[0]} LIKE '%{$search}%'");
-        return $this->nestedHaving($search);
-    }
-
-    /**
-     * Return all where conditions to be nested
-     *
-     * @param mixed $q
-     * @param string $search search string
-     *
-     * @return \Illuminate\Database\Eloquent\Builder instance
-     */
-    protected function nestedWheres($q,$search)
-    {
-        for ($i = 1; $i < count($this->whereColumns); $i++) {
-            $q->orWhere($this->whereColumns[$i], 'LIKE', "%{$search}%");
-        }
-        return $q; 
-    }
-
-    /**
-     * Return all having clauses to be nested
-     *
-     * @param string $type search string
-     *
-     * @return \Illuminate\Database\Eloquent\Builder instance
-     */
-    protected function nestedHaving($search)
-    {
-        for ($i = 1; $i < count($this->havingColumns); $i++) {
-            $this->query->orHavingRaw("{$this->havingColumns[$i]} LIKE '%{$search}%'");
-        }
-    }
+    
 
     /**
      * Initialise Datatable
@@ -430,88 +335,7 @@ abstract class AbstractDatatable implements DatatableDriverInterface
      */
     public function jsonResponse()
     {
-       return  json_encode($this->response());
-    }
-
-    /**
-     * Add/edit column details of datatable
-     *
-     * @param string column name
-     * @param Closure
-     *
-     * @return $this
-     */
-    public function add($column, Closure $closure)
-    {
-        foreach ($this->result as $r) {
-            $r->$column = $closure->call($this, $r);
-        }
-        return $this;
-    }
-
-    /**
-     * Add/edit column details of datatable
-     *
-     * @param string column name
-     * @param Closure
-     *
-     * @return $this
-     */
-    public function edit($column, Closure $closure)
-    {
-        return $this->add($column, $closure);
-    }
-
-    /**
-     * remove column  of datatable
-     *
-     * @param string/array
-     *
-     * @return $this
-     */
-    public function remove($column)
-    {
-        if (is_array($column)) {
-            foreach ($column as $c) {
-                foreach ($this->result as $r) {
-                    unset($r->$c);
-                }
-            }
-        } else {
-            foreach ($this->result as $r) {
-                unset($r->$column);
-            }
-        }
-        return $this;
-    }
-
-    /**
-     * Add/edit  details of multiple columns of datatable
-     *
-     * @param array $column
-     *
-     * @return $this
-     */
-    public function addColumns(array $column)
-    {
-        foreach ($column as $c => $cols) {
-            foreach ($this->result as $r) {
-                $r->$c = $cols->call($this, $r);
-            }
-        }
-        return $this;
-    }
-
-    /**
-     * Add/edit  details of multiple columns of datatable
-     *
-     * @param array $column
-     *
-     * @return $this
-     */
-    public function editColumns(array $column)
-    {
-        return $this->addColumns($column);
+       return response()->json($this->response());
     }
 
     /**
