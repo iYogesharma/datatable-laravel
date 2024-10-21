@@ -48,9 +48,6 @@
                 "Datatable": "YS\\Datatable\\Facades\\Datatable",
                 "Table": "YS\\Datatable\\Facades\\Table"
             }
-        },
-        "branch-alias": {
-            "dev-master": "4.x"
         }
     }
 }
