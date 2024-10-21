@@ -8,9 +8,9 @@ A simple package to ease datatable.js server side operations
 This package is created to handle [server-side](https://www.datatables.net/manual/server-side) and [client-side](https://www.datatables.net/manual) works of [DataTables](http://datatables.net) jQuery Plugin via [AJAX option](https://datatables.net/reference/option/ajax) by using Eloquent ORM, Query Builder or Collection.
 
 
-## datatable-laravel 2.0
+## datatable-laravel 3.x
 
-Version 2.0 continues the improvements in version 1.0.3 by introducing some new functions , improved code structure  and various bug fixes.
+Version 3.x continues the improvements in version 2.x by introducing some new functions , improved code structure  and various bug fixes.
 
 ## New
 
