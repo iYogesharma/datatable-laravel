@@ -3,6 +3,7 @@
 namespace YS\Datatable\Traits;
 
 use Illuminate\Database\Query\Expression;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 trait HasQueryBuilder
@@ -59,7 +60,7 @@ trait HasQueryBuilder
         {
             $from = strpos($this->query->from,'.') ? explode('.',$this->query->from)[1] : $this->query->from; 
            
-            $this->query->columns = Schema::connection($connection)->getColumnListing( $from );
+            $this->query->columns = $this->getColumnListing( $connection, $from );
          
             !empty( $skip ) && delete_keys($this->query->columns,  $skip);
         }
@@ -73,7 +74,7 @@ trait HasQueryBuilder
                     
                     $table = explode('.*',$c)[0];
                     
-                    $columns = Schema::connection($connection)->getColumnListing( $table );
+                    $columns = $this->getColumnListing( $connection, $table );
                     
                     !empty( $skip ) && delete_keys($columns, $skip);
                     
@@ -87,6 +88,16 @@ trait HasQueryBuilder
             }
         }
 
+    }
+
+    private function getColumnListing( string $connection, string $table)
+    {
+        $columnList = DB::select("SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = ? AND TABLE_SCHEMA = ?", [
+            $table, // Table name
+            $connection // Database name
+        ]);
+      
+        return !empty( $columnList ) ?  array_map(fn($col) => $col->COLUMN_NAME, $columnList) : $columnList;
     }
 
     private function identifyGlobalSerachColumnNames() {
