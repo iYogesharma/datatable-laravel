@@ -266,16 +266,14 @@ abstract class AbstractDatatable implements DatatableDriverInterface
     }
         
 
-       /**
+    /**
      * Prepare result to return as response
      *
      * @return void
      */
     protected function prepareQueryWithoutOffset()
     {
-        $this->query = $this->query->orderBy($this->columns[$this->order],$this->dir);
-
-        $this->result = $this->query->get();
+        $this->result =  $this->queryWithOrderBy()->get();
     }
 
     /**
@@ -285,10 +283,24 @@ abstract class AbstractDatatable implements DatatableDriverInterface
      */
     public function prepareQueryWithOffsetAndOrderBy()
     {
-        $this->query = $this->query->offset($this->request->getStart())
-                            ->limit($this->request->getPerPage())
-                            ->orderBy($this->columns[$this->order],$this->dir);
+        $this->query = $this->queryWithOrderBy()
+                            ->offset($this->request->getStart())
+                            ->limit($this->request->getPerPage());
+
         $this->result = $this->query->get();
+    }
+
+    /**
+     * Add Order By Clause to Query IF Column list is not empty
+     */
+    private function queryWithOrderBy()
+    {
+        if( isset( $this->columns[$this->order] ) )
+        {
+            $this->query = $this->query->orderBy($this->columns[$this->order],$this->dir);
+        }
+
+        return $this->query;
     }
 
     /**

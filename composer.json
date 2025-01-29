@@ -6,7 +6,7 @@
         "datatable",
         "laravel"
     ],
-    "version": "4.0",
+    "version": "4.1",
     "license": "MIT",
     "authors": [{
         "name": "Yogesh Sharma",
