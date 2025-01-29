@@ -4,6 +4,10 @@
     
     class DatatableRequest
     {
+        const LIMIT = 100;
+
+        const OFFSET = 0;
+
         /**
          * @var \Illuminate\Http\Request
          */
@@ -73,20 +77,20 @@
         }
     
         /**
-         * @return string
+         * @return int
          */
         public function getStart()
         {
-            return $this->request->input('start');
+            return $this->request->input('start') ?? self::OFFSET;
         }
     
         /**
          * Get max data per page for pagination
-         * @return array|string
+         * @return array|int
          */
         public function getPerPage()
         {
-            return $this->request->input('length');
+            return $this->request->input('length')  ?? self::LIMIT;
         }
     
         /**

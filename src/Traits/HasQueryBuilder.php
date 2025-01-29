@@ -53,11 +53,15 @@ trait HasQueryBuilder
     {
         $skip  = config('datatable.skip') ?? [];
 
+        $connection = $this->query->connection->getDatabaseName();
+
         if(  empty($this->query->columns)  || $this->query->columns[0] === '*' )
         {
-            $this->query->columns = Schema::getColumnListing( $this->query->from );
+            $from = strpos($this->query->from,'.') ? explode('.',$this->query->from)[1] : $this->query->from; 
+           
+            $this->query->columns = Schema::connection($connection)->getColumnListing( $from );
          
-            delete_keys($this->query->columns,  $skip);
+            !empty( $skip ) && delete_keys($this->query->columns,  $skip);
         }
         else
         {
@@ -69,9 +73,9 @@ trait HasQueryBuilder
                     
                     $table = explode('.*',$c)[0];
                     
-                    $columns = Schema::getColumnListing( $table );
+                    $columns = Schema::connection($connection)->getColumnListing( $table );
                     
-                    delete_keys($columns, $skip);
+                    !empty( $skip ) && delete_keys($columns, $skip);
                     
                     array_walk($columns, function(&$value)use($table) { $value = "{$table}.{$value}"; } );
                     
