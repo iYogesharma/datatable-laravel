@@ -217,7 +217,7 @@ abstract class AbstractDatatable implements DatatableDriverInterface
                             $this->whereColumns[] =  trim($c);
                         }
 
-                    } else {
+                    } elseif(in_array($c, $this->searchColumns, true)) {
                         $this->whereColumns[] = trim($c);
                     }
                 }
