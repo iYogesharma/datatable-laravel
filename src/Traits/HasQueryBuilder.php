@@ -283,7 +283,7 @@ trait HasQueryBuilder
                     if (!$globalSearch || in_array(explode('.', $columnName)[1], $this->globalSearchColumns, true)) {
                         $this->whereColumns[] =  [trim($columnName), $search];
                     }
-                } else {
+                } elseif (!$globalSearch || in_array( $columnName, $this->globalSearchColumns, true)) {
                     $this->whereColumns[] = [trim($columnName), $search];
                 }
             }
