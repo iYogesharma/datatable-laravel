@@ -187,7 +187,7 @@ abstract class AbstractDatatable implements DatatableDriverInterface
         }
     }
 
-    /**
+	/**
      * Set column names for where conditions of query
      *
      * @return void
@@ -203,23 +203,20 @@ abstract class AbstractDatatable implements DatatableDriverInterface
                         $this->havingColumns[] = trim($column[1]);
                     }
                 } 
+            }elseif(strpos($c, ' as ')) {
+                $column = explode(' as ', $c);
+                if (in_array(trim($column[1]), $this->searchColumns, true)) {
+                    $this->whereColumns[] = trim($column[0]);
+                }
             }
             else if (!strpos($c, '_id')) {
-                if (strpos($c, ' as ')) {
-                    $column = explode(' as ', $c);
-                    if (in_array(trim($column[1]), $this->searchColumns, true)) {
-                        $this->whereColumns[] = trim($column[0]);
+                if (isset(explode('.', $c)[1])) {
+                    if (in_array(explode('.', $c)[1], $this->searchColumns, true)) {
+                        $this->whereColumns[] =  trim($c);
                     }
 
-                } else {
-                    if (isset(explode('.', $c)[1])) {
-                        if (in_array(explode('.', $c)[1], $this->searchColumns, true)) {
-                            $this->whereColumns[] =  trim($c);
-                        }
-
-                    } elseif(in_array($c, $this->searchColumns, true)) {
-                        $this->whereColumns[] = trim($c);
-                    }
+                } elseif(in_array($c, $this->searchColumns, true)) {
+                    $this->whereColumns[] = trim($c);
                 }
             }
         }
