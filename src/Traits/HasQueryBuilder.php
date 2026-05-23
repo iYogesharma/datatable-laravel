@@ -270,22 +270,22 @@ trait HasQueryBuilder
                     $this->havingColumns[] = [trim($column[1]), $search];
                 }
             }
+        } 
+        elseif (strpos($columnName, ' as ')) {
+            $column = explode(' as ',$columnName);
+            if (!$globalSearch || in_array(trim($column[1]), $this->globalSearchColumns, true)) {
+                $this->whereColumns[] = [trim($column[0]), $search];
+            }
+
         }
         elseif (!strpos($columnName, '_id')) {
-            if (strpos($columnName, ' as ')) {
-                $column = explode(' as ',$columnName);
-                if (!$globalSearch || in_array(trim($column[1]), $this->globalSearchColumns, true)) {
-                    $this->whereColumns[] = [trim($column[0]), $search];
+            if (isset(explode('.', $columnName)[1])) {
+                if (!$globalSearch || in_array(explode('.', $columnName)[1], $this->globalSearchColumns, true)) {
+                    $this->whereColumns[] =  [trim($columnName), $search];
                 }
-
-            } else {
-                if (isset(explode('.', $columnName)[1])) {
-                    if (!$globalSearch || in_array(explode('.', $columnName)[1], $this->globalSearchColumns, true)) {
-                        $this->whereColumns[] =  [trim($columnName), $search];
-                    }
-                } else {
-                    $this->whereColumns[] = [trim($columnName), $search];
-                }
+            } 
+            elseif (!$globalSearch || in_array( $columnName, $this->globalSearchColumns, true)) {
+                $this->whereColumns[] = [trim($columnName), $search];
             }
         }
     }
