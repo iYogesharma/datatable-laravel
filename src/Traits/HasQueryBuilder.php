@@ -171,14 +171,14 @@ trait HasQueryBuilder
      * @param string  querySelectString
      * */
     protected function extractColumnNamesFromSelectRawQuery($querySelectString) {
-        return array_map(function($column) {
+       return array_map(function($column) {
             $column = trim($column);
 
             if (str_contains($column, '(') && str_contains($column, ')')) {
                 $column = new Expression($column);
             }
             return  $column;
-        }, explode(',',$querySelectString));
+        }, preg_split('/,(?![^(]*\))/', $querySelectString));
     }
 
     /**
@@ -234,25 +234,39 @@ trait HasQueryBuilder
 
             foreach( $columns as  $column )
             {
-                $columnName  = $column;
-                if(gettype($columnName) === 'object'){  $columnName  = $columnName->getValue($this->query->grammar);}
+                $columnName  = $this->getColumnName($column);
+
                 foreach ($searchColumns as  $key => $search)
                 {
-                    if (str_contains( $columnName, $key))
+                    if ( $columnName ===  $key)
                     {
                         $this->searchColumns[] = ['name' => $column, 'search' => $search];
+                        $this->setWhereColumn( $column,  $search, false );
                     }
                 }
             }
 
             $searchColumns = null;
+        }
 
-            foreach( $this->searchColumns as $column )
-            {
-                $this->setWhereColumn( $column['name'], $column['search'], false );
+    }
+
+    protected function getColumnName(string|object $columnName):string
+    {
+        $column = [];
+        if(gettype($columnName) === 'object') {
+            $columnName  = $columnName->getValue($this->query->grammar);
+            if (strpos($columnName, ' as ')) {
+                $column = explode(' as ', $columnName)[1];
             }
         }
-     
+        elseif (strpos($columnName, ' as ')) {
+            $column = explode(' as ',$columnName);
+        }
+        elseif (!strpos($columnName, '_id')) {
+            $column = explode('.', $columnName);
+        }
+        return  !empty($column) && isset($column[1]) ? $column[1] : $columnName;
     }
 
     /**
@@ -326,8 +340,14 @@ trait HasQueryBuilder
      */
     protected function nestedWheres($q)
     {
+        $andRequest = $this->request->isAnd();
+
         for ($i = 1; $i < count($this->whereColumns); $i++) {
-            $q->orWhere($this->whereColumns[$i][0], 'LIKE', "%{$this->whereColumns[$i][1]}%");
+            if( $andRequest ) {
+                $q->where($this->whereColumns[$i][0], 'LIKE', "%{$this->whereColumns[$i][1]}%");
+            } else {
+                $q->orWhere($this->whereColumns[$i][0], 'LIKE', "%{$this->whereColumns[$i][1]}%");
+            }
         }
         return $q; 
     }
@@ -339,8 +359,14 @@ trait HasQueryBuilder
      */
     protected function nestedHaving()
     {
+        $andRequest = $this->request->isAnd();
+
         for ($i = 1; $i < count($this->havingColumns); $i++) {
-            $this->query->orHavingRaw("{$this->havingColumns[$i][0]} LIKE '%{$this->havingColumns[$i][1]}%'");
+            if( $andRequest ) {
+                $this->query->havingRaw("{$this->havingColumns[$i][0]} LIKE '%{$this->havingColumns[$i][1]}%'");
+            } else {
+                $this->query->orHavingRaw("{$this->havingColumns[$i][0]} LIKE '%{$this->havingColumns[$i][1]}%'");
+            }
         }
     }
 

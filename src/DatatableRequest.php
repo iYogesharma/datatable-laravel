@@ -8,6 +8,11 @@
 
         const OFFSET = 0;
 
+        const OR = 'or';
+
+        const AND = 'and';
+
+
         /**
          * @var \Illuminate\Http\Request
          */
@@ -39,6 +44,26 @@
         public function isSearchable()
         {
             return $this->request->input('search.value') != '';
+        }
+
+        /**
+         * Check search operator
+         *
+         * @return bool
+         */
+        public function operator()
+        {
+            return $this->request->input('operator') ?? self::OR;
+        }
+
+         /**
+         * Check if search operator is and
+         *
+         * @return bool
+         */
+        public function isAnd()
+        {
+            return $this->operator() === self::AND;
         }
     
         /**
