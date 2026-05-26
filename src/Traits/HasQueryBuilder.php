@@ -326,8 +326,14 @@ trait HasQueryBuilder
      */
     protected function nestedWheres($q)
     {
+        $andRequest = $this->request->isAnd();
+
         for ($i = 1; $i < count($this->whereColumns); $i++) {
-            $q->orWhere($this->whereColumns[$i][0], 'LIKE', "%{$this->whereColumns[$i][1]}%");
+            if( $andRequest ) {
+                $q->where($this->whereColumns[$i][0], 'LIKE', "%{$this->whereColumns[$i][1]}%");
+            } else {
+                $q->orWhere($this->whereColumns[$i][0], 'LIKE', "%{$this->whereColumns[$i][1]}%");
+            }
         }
         return $q; 
     }
@@ -339,8 +345,14 @@ trait HasQueryBuilder
      */
     protected function nestedHaving()
     {
+        $andRequest = $this->request->isAnd();
+
         for ($i = 1; $i < count($this->havingColumns); $i++) {
-            $this->query->orHavingRaw("{$this->havingColumns[$i][0]} LIKE '%{$this->havingColumns[$i][1]}%'");
+            if( $andRequest ) {
+                $this->query->havingRaw("{$this->havingColumns[$i][0]} LIKE '%{$this->havingColumns[$i][1]}%'");
+            } else {
+                $this->query->orHavingRaw("{$this->havingColumns[$i][0]} LIKE '%{$this->havingColumns[$i][1]}%'");
+            }
         }
     }
 
