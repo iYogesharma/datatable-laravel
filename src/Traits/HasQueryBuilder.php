@@ -174,7 +174,7 @@ trait HasQueryBuilder
        return array_map(function($column) {
             $column = trim($column);
 
-            if (str_contains($column, '(') && str_contains($column, ')')) {
+            if (str_contains($column, 'CASE') || (str_contains($column, '(') && str_contains($column, ')'))) {
                 $column = new Expression($column);
             }
             return  $column;
