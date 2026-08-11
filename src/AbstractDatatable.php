@@ -222,7 +222,11 @@ abstract class AbstractDatatable implements DatatableDriverInterface
         $this->setWhereColumns();
 
         if (!empty($this->whereColumns)) {
-            $this->query = $this->condition( $this->whereColumns );
+            $this->query = $this->condition( $this->whereColumns, false );
+        }
+
+        if (!empty($this->havingColumns)) {
+            $this->havingCondition($this->havingColumns);
         }
     }
 

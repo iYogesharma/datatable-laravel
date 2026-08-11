@@ -100,38 +100,35 @@ trait HasQueryBuilder
         return !empty( $columnList ) ?  array_map(fn($col) => $col->COLUMN_NAME, $columnList) : $columnList;
     }
 
-    private function identifyGlobalSerachColumnNames() {
+     private function identifyGlobalSerachColumnNames() {
 
         foreach( $this->queryColumns() as $columnName )
         {
             if(gettype($columnName) != 'string')
             {
-                $this->globalSearchColumns[] = $columnName;
+                $value = $columnName->getValue($this->query->grammar);
+                if (stripos($value, ' as ')) {
+                    $column = preg_split('/ as /i', $value);
+                    $this->globalSearchColumns[] = trim($column[1]);
+                } else {
+                    $this->globalSearchColumns[] = $value;
+                }
             }
-            elseif (strpos($columnName, ' as '))
+            elseif (stripos($columnName, ' as '))
             {
-                $column = explode(' as ',$columnName);
-                $this->globalSearchColumns[] = $column[1];
+                $column = preg_split('/ as /i', $columnName);
+                $this->globalSearchColumns[] = trim($column[1]);
             }
             elseif (!strpos($columnName, '_id'))
             {
-                if (strpos($columnName, ' as '))
+                if (isset(explode('.', $columnName)[1]))
                 {
-                    $column = explode(' as ',$columnName);
+                    $column = explode('.',$columnName);
                     $this->globalSearchColumns[] = $column[1];
-    
                 } 
                 else 
                 {
-                    if (isset(explode('.', $columnName)[1]))
-                    {
-                        $column = explode('.',$columnName);
-                        $this->globalSearchColumns[] = $column[1];
-                    } 
-                    else 
-                    {
-                        $this->globalSearchColumns[] = $columnName;
-                    }
+                    $this->globalSearchColumns[] = $columnName;
                 }
             }
         }
@@ -171,14 +168,40 @@ trait HasQueryBuilder
      * @param string  querySelectString
      * */
     protected function extractColumnNamesFromSelectRawQuery($querySelectString) {
-       return array_map(function($column) {
-            $column = trim($column);
+        $columns = [];
+        $depth = 0;
+        $current = '';
+        $len = strlen($querySelectString);
 
-            if (str_contains($column, 'CASE') || (str_contains($column, '(') && str_contains($column, ')'))) {
-                $column = new Expression($column);
+        $processColumn = function($col) {
+            $col = trim($col);
+            if (str_contains($col, 'CASE') || (str_contains($col, '(') && str_contains($col, ')'))) {
+                return new Expression($col);
             }
-            return  $column;
-        }, preg_split('/,(?![^(]*\))/', $querySelectString));
+            return $col;
+        };
+        
+        for ($i = 0; $i < $len; $i++) {
+            $char = $querySelectString[$i];
+            if ($char === '(') {
+                $depth++;
+            } elseif ($char === ')') {
+                $depth--;
+            }
+            
+            if ($char === ',' && $depth === 0) {
+                $columns[] = $processColumn($current);
+                $current = '';
+            } else {
+                $current .= $char;
+            }
+        }
+        
+        if ($current !== '') {
+            $columns[] = $processColumn($current);
+        }
+
+        return $columns;
     }
 
     /**
@@ -256,17 +279,17 @@ trait HasQueryBuilder
         $column = [];
         if(gettype($columnName) === 'object') {
             $columnName  = $columnName->getValue($this->query->grammar);
-            if (strpos($columnName, ' as ')) {
-                $column = explode(' as ', $columnName)[1];
+            if (stripos($columnName, ' as ')) {
+                $column = preg_split('/ as /i', $columnName);
             }
         }
-        elseif (strpos($columnName, ' as ')) {
-            $column = explode(' as ',$columnName);
+        elseif (stripos($columnName, ' as ')) {
+            $column = preg_split('/ as /i', $columnName);
         }
         elseif (!strpos($columnName, '_id')) {
             $column = explode('.', $columnName);
         }
-        return  !empty($column) && isset($column[1]) ? $column[1] : $columnName;
+        return  !empty($column) && isset($column[1]) ? trim($column[1]) : $columnName;
     }
 
     /**
@@ -278,15 +301,15 @@ trait HasQueryBuilder
     {
         if(gettype($columnName) === 'object'){
             $columnName  = $columnName->getValue($this->query->grammar);
-            if (strpos($columnName, ' as ')) {
-                $column = explode(' as ', $columnName);
+            if (stripos($columnName, ' as ')) {
+                $column = preg_split('/ as /i', $columnName);
                 if (!$globalSearch || in_array(trim($column[1]), $this->globalSearchColumns, true)) {
-                    $this->havingColumns[] = [trim($column[1]), $search];
+                    $this->whereColumns[] = [trim($column[0]), $search, true];
                 }
             }
         } 
-        elseif (strpos($columnName, ' as ')) {
-            $column = explode(' as ',$columnName);
+        elseif (stripos($columnName, ' as ')) {
+            $column = preg_split('/ as /i', $columnName);
             if (!$globalSearch || in_array(trim($column[1]), $this->globalSearchColumns, true)) {
                 $this->whereColumns[] = [trim($column[0]), $search];
             }
@@ -313,7 +336,11 @@ trait HasQueryBuilder
     protected function condition( $columns )
     {
         return $this->query->where(function ($q) use ($columns) {
-            $q->where($columns[0][0], 'LIKE', "%{$columns[0][1]}%");
+            if (isset($columns[0][2]) && $columns[0][2] === true) {
+                $q->whereRaw("{$columns[0][0]} LIKE ?", ["%{$columns[0][1]}%"]);
+            } else {
+                $q->where($columns[0][0], 'LIKE', "%{$columns[0][1]}%");
+            }
             return $this->nestedWheres($q);
         });
     }
@@ -343,10 +370,22 @@ trait HasQueryBuilder
         $andRequest = $this->request->isAnd();
 
         for ($i = 1; $i < count($this->whereColumns); $i++) {
+            $col = $this->whereColumns[$i][0];
+            $search = $this->whereColumns[$i][1];
+            $isRaw = isset($this->whereColumns[$i][2]) && $this->whereColumns[$i][2] === true;
+
             if( $andRequest ) {
-                $q->where($this->whereColumns[$i][0], 'LIKE', "%{$this->whereColumns[$i][1]}%");
+                if ($isRaw) {
+                    $q->whereRaw("{$col} LIKE ?", ["%{$search}%"]);
+                } else {
+                    $q->where($col, 'LIKE', "%{$search}%");
+                }
             } else {
-                $q->orWhere($this->whereColumns[$i][0], 'LIKE', "%{$this->whereColumns[$i][1]}%");
+                if ($isRaw) {
+                    $q->orWhereRaw("{$col} LIKE ?", ["%{$search}%"]);
+                } else {
+                    $q->orWhere($col, 'LIKE', "%{$search}%");
+                }
             }
         }
         return $q; 
