@@ -304,14 +304,30 @@ trait HasQueryBuilder
             if (stripos($columnName, ' as ')) {
                 $column = preg_split('/ as /i', $columnName);
                 if (!$globalSearch || in_array(trim($column[1]), $this->globalSearchColumns, true)) {
-                    $this->whereColumns[] = [trim($column[0]), $search, true];
+                    $colStr = trim($column[0]);
+                    if (preg_match('/^([\'"]).*\1$/', $colStr) || is_numeric($colStr) || strtolower($colStr) === 'null') {
+                        return; // Skip searching constant values
+                    }
+                    if (preg_match('/(SUM|COUNT|AVG|MIN|MAX)\s*\(/i', $colStr)) {
+                        $this->havingColumns[] = [$colStr, $search, true];
+                    } else {
+                        $this->whereColumns[] = [$colStr, $search, true];
+                    }
                 }
             }
-        } 
+        }
         elseif (stripos($columnName, ' as ')) {
             $column = preg_split('/ as /i', $columnName);
             if (!$globalSearch || in_array(trim($column[1]), $this->globalSearchColumns, true)) {
-                $this->whereColumns[] = [trim($column[0]), $search];
+                $colStr = trim($column[0]);
+                if (preg_match('/^([\'"]).*\1$/', $colStr) || is_numeric($colStr) || strtolower($colStr) === 'null') {
+                    return; // Skip searching constant values
+                }
+                if (preg_match('/(SUM|COUNT|AVG|MIN|MAX)\s*\(/i', $colStr)) {
+                    $this->havingColumns[] = [$colStr, $search];
+                } else {
+                    $this->whereColumns[] = [$colStr, $search];
+                }
             }
 
         }

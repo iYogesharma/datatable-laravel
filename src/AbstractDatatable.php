@@ -221,6 +221,15 @@ abstract class AbstractDatatable implements DatatableDriverInterface
         //set columns that are searchable
         $this->setWhereColumns();
 
+        $isGlobalSearch = !$this->request->isAnd();
+        
+        // If it is a global search and we have BOTH where and having columns,
+        // we cannot apply both because SQL will treat them as AND (returning 0 results).
+        // Solution: Prioritize WHERE columns for global search and ignore HAVING columns.
+        if ($isGlobalSearch && !empty($this->whereColumns) && !empty($this->havingColumns)) {
+            $this->havingColumns = []; 
+        }
+
         if (!empty($this->whereColumns)) {
             $this->query = $this->condition( $this->whereColumns, false );
         }
